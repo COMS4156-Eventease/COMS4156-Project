@@ -1,6 +1,8 @@
 package com.eventease.eventease_service.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,6 +21,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "user")
+@JsonDeserialize(builder = User.Builder.class)
 public class User implements Serializable {
   @Serial
   private static final long serialVersionUID = 100001L;
@@ -46,9 +49,9 @@ public class User implements Serializable {
 
   public User() {};
 
-  public User(String username, String password) {
-    this.username = username;
-    this.password = password;
+  public User(Builder builder) {
+    this.username = builder.username;
+    this.password = builder.password;
   }
 
   public Long getId() {
@@ -110,5 +113,53 @@ public class User implements Serializable {
   public void leaveEvent(Event event) {
     attendedEvents.remove(event);
     event.getParticipants().remove(this);  // Remove this user from the event's participants
+  }
+
+  public static class Builder {
+    @JsonProperty("id")
+    private Long id;
+
+    @JsonProperty("username")
+    private String username;
+
+    @JsonProperty("password")
+    private String password;
+
+    @JsonProperty("createdEvents")
+    private Set<Event> createdEvents = new HashSet<>();
+
+    @JsonProperty("attendedEvents")
+    private Set<Event> attendedEvents = new HashSet<>();
+
+    public Builder setId(Long id) {
+      this.id = id;
+      return this;
+    }
+
+    public Builder setUsername(String username) {
+      this.username = username;
+      return this;
+    }
+
+    public Builder setCreatedEvents(
+        Set<Event> createdEvents) {
+      this.createdEvents = createdEvents;
+      return this;
+    }
+
+    public Builder setAttendedEvents(
+        Set<Event> attendedEvents) {
+      this.attendedEvents = attendedEvents;
+      return this;
+    }
+
+    public Builder setPassword(String password) {
+      this.password = password;
+      return this;
+    }
+
+    public User build() {
+      return new User(this);
+    }
   }
 }

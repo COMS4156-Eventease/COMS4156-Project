@@ -56,6 +56,12 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
+		<!-- Spring Transaction Management -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+		</dependency>
+
 		<!-- MySQL Database Driver -->
 		<dependency>
 			<groupId>com.mysql</groupId>

@@ -1,5 +1,6 @@
 package com.eventease.eventease_service.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,7 +25,7 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "event")
-//@JsonDeserialize(builder = Event.Builder.class)
+@JsonDeserialize(builder = Event.Builder.class)
 public class Event implements Serializable {
 
   @Serial
@@ -60,33 +61,15 @@ public class Event implements Serializable {
 
   }
 
-  public User getHost() {
-    return host;
-  }
-
-
-  /**
-   * Constructs a new Event object with the given parameters.
-   *
-   * @param name        The name of the event.
-   * @param description A description of the event.
-   * @param location    The location of the event.
-   * @param date        The date of the event (in String format, should ideally be LocalDate).
-   * @param time        The time of the event (in String format, should ideally be LocalTime).
-   * @param host        The organizer for this event.
-   * @param capacity    The capacity for the event (number of people allowed to attend).
-   * @param budget      The budget allocated for the event.
-   */
-  public Event(String name, String description, String location, LocalDate date, LocalTime time,
-      User host, int capacity, int budget) {
-    this.name = name;
-    this.description = description;
-    this.location = location;
-    this.date = date;
-    this.time = time;
-    this.host = host;
-    this.capacity = capacity;
-    this.budget = budget;
+  public Event(Builder builder) {
+    this.name = builder.name;
+    this.description = builder.description;
+    this.location = builder.location;
+    this.date = builder.date;
+    this.time = builder.time;
+    this.host = builder.host;
+    this.capacity = builder.capacity;
+    this.budget = builder.budget;
   }
 
   public Long getId() {
@@ -153,6 +136,10 @@ public class Event implements Serializable {
     this.budget = budget;
   }
 
+  public User getHost() {
+    return host;
+  }
+
   public void setHost(User host) {
     this.host = host;
   }
@@ -173,5 +160,91 @@ public class Event implements Serializable {
   // Remove a participant from the event
   public void removeParticipant(User user) {
     this.participants.remove(user);
+  }
+
+  public static class Builder{
+    @JsonProperty("id")
+    private Long id;
+
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("description")
+    private String description;
+
+    @JsonProperty("location")
+    private String location;
+
+    @JsonProperty("date")
+    private LocalDate date;
+
+    @JsonProperty("time")
+    private LocalTime time;
+
+    @JsonProperty("capacity")
+    private int capacity;
+
+    @JsonProperty("budget")
+    private int budget;
+
+    @JsonProperty("host")
+    private User host;
+
+    @JsonProperty("participants")
+    private Set<User> participants = new HashSet<User>();
+
+    public Builder setId(Long id) {
+      this.id = id;
+      return this;
+    }
+
+    public Builder setName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder setDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
+    public Builder setLocation(String location) {
+      this.location = location;
+      return this;
+    }
+
+    public Builder setDate(LocalDate date) {
+      this.date = date;
+      return this;
+    }
+
+    public Builder setTime(LocalTime time) {
+      this.time = time;
+      return this;
+    }
+
+    public Builder setCapacity(int capacity) {
+      this.capacity = capacity;
+      return this;
+    }
+
+    public Builder setBudget(int budget) {
+      this.budget = budget;
+      return this;
+    }
+
+    public Builder setHost(User host) {
+      this.host = host;
+      return this;
+    }
+
+    public Builder setParticipants(Set<User> participants) {
+      this.participants = participants;
+      return this;
+    }
+
+    public Event build() {
+      return new Event(this);
+    }
   }
 }
