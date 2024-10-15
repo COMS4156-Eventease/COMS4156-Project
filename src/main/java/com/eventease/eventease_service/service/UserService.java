@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -24,5 +25,35 @@ public class UserService {
 
     public Iterable<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    public String updateUser(Long id, User updatedUser) {
+        Optional<User> existingUserOptional = userRepository.findById(id);
+
+        if (existingUserOptional.isPresent()) {
+            User existingUser = existingUserOptional.get();
+
+            // Update the fields
+            if (updatedUser.getFirstName() != null) existingUser.setFirstName(updatedUser.getFirstName());
+            if (updatedUser.getLastName() != null) existingUser.setLastName(updatedUser.getLastName());
+            if (updatedUser.getEmail() != null) existingUser.setEmail(updatedUser.getEmail());
+            if (updatedUser.getPhoneNumber() != null) existingUser.setPhoneNumber(updatedUser.getPhoneNumber());
+            if (updatedUser.getRole() != null) existingUser.setRole(updatedUser.getRole());
+            if (updatedUser.getPassword() != null) existingUser.setPassword(updatedUser.getPassword());
+            if (updatedUser.getPreferences() != null) existingUser.setPreferences(updatedUser.getPreferences());
+            if (updatedUser.getAccessibilityMode() != null) existingUser.setAccessibilityMode(updatedUser.getAccessibilityMode());
+            if (updatedUser.getRsvpNotifications() != null) existingUser.setRsvpNotifications(updatedUser.getRsvpNotifications());
+            if (updatedUser.getSmsEnabled() != null) existingUser.setSmsEnabled(updatedUser.getSmsEnabled());
+            if (updatedUser.getEmailEnabled() != null) existingUser.setEmailEnabled(updatedUser.getEmailEnabled());
+
+            // Update the timestamp for the update
+            existingUser.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+
+            // Save updated user to the database
+            userRepository.save(existingUser);
+            return "User updated successfully";
+        } else {
+            return "User not found";
+        }
     }
 }
