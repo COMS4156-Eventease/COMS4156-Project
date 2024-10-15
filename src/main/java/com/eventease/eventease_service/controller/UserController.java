@@ -1,9 +1,17 @@
 package com.eventease.eventease_service.controller;
 
+
 import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/users")
@@ -18,7 +26,7 @@ public class UserController {
         return "User saved successfully";
     }
 
-    @GetMapping("/users")
+    @GetMapping("/list")
     public Iterable<User> getUsersByFilter(
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String lastName,

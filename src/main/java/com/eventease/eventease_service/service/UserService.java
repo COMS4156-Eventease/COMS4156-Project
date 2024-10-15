@@ -1,12 +1,13 @@
 package com.eventease.eventease_service.service;
 
+import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.repository.UserRepository;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.Optional;
 
 @Service
 public class UserService {
@@ -51,11 +52,6 @@ public class UserService {
             if (updatedUser.getPhoneNumber() != null) existingUser.setPhoneNumber(updatedUser.getPhoneNumber());
             if (updatedUser.getRole() != null) existingUser.setRole(updatedUser.getRole());
             if (updatedUser.getPassword() != null) existingUser.setPassword(updatedUser.getPassword());
-            if (updatedUser.getPreferences() != null) existingUser.setPreferences(updatedUser.getPreferences());
-            if (updatedUser.getAccessibilityMode() != null) existingUser.setAccessibilityMode(updatedUser.getAccessibilityMode());
-            if (updatedUser.getRsvpNotifications() != null) existingUser.setRsvpNotifications(updatedUser.getRsvpNotifications());
-            if (updatedUser.getSmsEnabled() != null) existingUser.setSmsEnabled(updatedUser.getSmsEnabled());
-            if (updatedUser.getEmailEnabled() != null) existingUser.setEmailEnabled(updatedUser.getEmailEnabled());
 
             // Update the timestamp for the update
             existingUser.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
@@ -67,4 +63,12 @@ public class UserService {
             return "User not found";
         }
     }
+  // This method retrieves a user by its ID. If the user is not found, it throws an exception
+  public User findUserById(long id) {
+    User user = userRepository.findById(id);
+    if (user == null) {
+      throw new UserNotExistException("User is not found.");
+    }
+    return user;
+  }
 }
