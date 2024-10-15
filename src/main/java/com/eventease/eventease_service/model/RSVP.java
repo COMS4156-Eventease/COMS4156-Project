@@ -15,10 +15,17 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "RSVP")
+@IdClass(RSVP.class)
 public class RSVP {
+  @Id
+  @ManyToOne
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 
-  @EmbeddedId
-  private RSVPId id;
+  @Id
+  @ManyToOne
+  @JoinColumn(name = "event_id", nullable = false)
+  private Event event;
 
   private String status;
 
