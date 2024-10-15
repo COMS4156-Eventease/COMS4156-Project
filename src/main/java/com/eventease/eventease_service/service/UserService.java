@@ -22,11 +22,6 @@ public class UserService {
         userRepository.save(user);
     }
 
-
-    public Iterable<User> getAllUsers() {
-        return userRepository.findAll();
-    }
-
     public Iterable<User> getUsersByFilter(
             String firstName, String lastName, String email,
             String phone, User.Role role)

@@ -18,12 +18,6 @@ public class UserController {
         return "User saved successfully";
     }
 
-
-    @GetMapping("/all")
-    public Iterable<User> getAllUsers() {
-        return userService.getAllUsers();
-    }
-
     @GetMapping("/users")
     public Iterable<User> getUsersByFilter(
             @RequestParam(required = false) String firstName,
