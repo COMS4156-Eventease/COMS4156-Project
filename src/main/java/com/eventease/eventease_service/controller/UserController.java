@@ -24,6 +24,17 @@ public class UserController {
         return userService.getAllUsers();
     }
 
+    @GetMapping("/users")
+    public Iterable<User> getUsersByFilter(
+            @RequestParam(required = false) String firstName,
+            @RequestParam(required = false) String lastName,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) User.Role role)
+    {
+        return userService.getUsersByFilter(firstName, lastName, email, phone, role);
+    }
+
 
     @PatchMapping("/update/{id}")
     public String updateUser(@PathVariable Long id, @RequestBody User user) {

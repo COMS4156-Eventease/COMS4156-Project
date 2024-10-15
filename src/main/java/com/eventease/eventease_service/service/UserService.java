@@ -27,6 +27,22 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    public Iterable<User> getUsersByFilter(
+            String firstName, String lastName, String email,
+            String phone, User.Role role)
+    {
+        return userRepository.findAll((root, query, cb) -> {
+            // Create a predicate for filtering based on the provided parameters
+            return cb.and(
+                    firstName != null ? cb.equal(root.get("firstName"), firstName) : cb.conjunction(),
+                    lastName != null ? cb.equal(root.get("lastName"), lastName) : cb.conjunction(),
+                    email != null ? cb.equal(root.get("email"), email) : cb.conjunction(),
+                    phone != null ? cb.equal(root.get("phoneNumber"), phone) : cb.conjunction(),
+                    role != null ? cb.equal(root.get("role"), role) : cb.conjunction()
+            );
+        });
+    }
+
     public String updateUser(Long id, User updatedUser) {
         Optional<User> existingUserOptional = userRepository.findById(id);
 
