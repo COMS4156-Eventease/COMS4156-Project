@@ -37,35 +37,18 @@ public class EventController {
   }
 
   // Create a new event with details such as name, time, date, location, organizer, capacity, and budget.
-  @PostMapping(value = "/events")
-  public ResponseEntity<?> addEvent( @RequestParam String name,
-      @RequestParam String description,
-      @RequestParam String location,
-      @RequestParam String date,   // String to handle LocalDate parsing manually
-      @RequestParam String time,   // String to handle LocalTime parsing manually
-      @RequestParam int capacity,
-      @RequestParam int budget,
-      @RequestParam Long organizerId) {
-
+  @PostMapping
+  public ResponseEntity<?> addEvent(
+      @RequestParam Long organizerId,
+      @RequestBody Event event
+  ) {
     try {
       User organizer = userService.findUserById(organizerId);
       if (organizer == null) {
         return new ResponseEntity<>("Organizer not found", HttpStatus.NOT_FOUND);
       }
 
-      LocalDate eventDate = LocalDate.parse(date);  // Ensure date format is correct (e.g., "2024-10-10")
-      LocalTime eventTime = LocalTime.parse(time);
-
-      Event event = new Event.Builder()
-          .setName(name)
-          .setDescription(description)
-          .setLocation(location)
-          .setDate(eventDate)
-          .setTime(eventTime)
-          .setCapacity(capacity)
-          .setBudget(budget)
-          .setHost(organizer)  // Set the host (organizer)
-          .build();
+      event.setHost(organizer);
 
       eventService.add(event);
 
@@ -80,7 +63,7 @@ public class EventController {
   }
 
   // Retrieve details of a specific event by its ID.
-  @GetMapping(value = "/events/{eventId}")
+  @GetMapping(value = "/{eventId}")
   public ResponseEntity<?> getEventById(@PathVariable Long eventId) {
     try {
       // Retrieve the event by ID using the service
@@ -95,7 +78,7 @@ public class EventController {
   }
 
   // Retrieve a list of events with optional filters (e.g., date range)
-  @GetMapping(value = "/events")
+  @GetMapping
   public ResponseEntity<List<Event>> getEvents(
       @RequestParam(value = "startDate")
       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -107,7 +90,7 @@ public class EventController {
   }
 
   // Delete a specific event.
-  @DeleteMapping(value = "/events/{eventId}")
+  @DeleteMapping(value = "/{eventId}")
   public ResponseEntity<?> deleteEventById(@PathVariable Long eventId) {
     try {
       eventService.delete(eventId);
@@ -119,12 +102,17 @@ public class EventController {
   }
 
   // Update an existing event's details.
-  @PatchMapping("/events/{eventId}")
+  @PatchMapping("{eventId}")
   public ResponseEntity<String> updateEvent(
       @PathVariable Long eventId,
       @RequestBody Event updatedEvent) {
 
     try {
+      Event existingEvent = eventService.findById(eventId);
+      if (existingEvent == null) {
+        return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
+      }
+
       eventService.updateEvent(eventId, updatedEvent);
       return new ResponseEntity<>("Event updated successfully", HttpStatus.OK);
     } catch (EventNotExistException e) {

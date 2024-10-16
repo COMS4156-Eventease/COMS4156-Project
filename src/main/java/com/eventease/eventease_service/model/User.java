@@ -65,6 +65,7 @@ public class User implements Serializable {
   private Timestamp updatedAt;
 
   @OneToMany(mappedBy = "host", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonIgnore
   private Set<Event> createdEvents = new HashSet<>();
 
   // Many-to-Many relationship: a user can attend many events

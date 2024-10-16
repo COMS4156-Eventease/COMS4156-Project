@@ -1,5 +1,6 @@
 package com.eventease.eventease_service.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.Entity;
@@ -49,6 +50,7 @@ public class Event implements Serializable {
   private User host;
 
   // Many-to-many relationship for event participants
+  @JsonIgnore
   @ManyToMany
   @JoinTable(
       name = "event_participants",
