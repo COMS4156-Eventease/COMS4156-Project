@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class RSVPKey {
-  private Long user_id;
-  private Long event_id;
+  private User user;
+  private Event event;
 }

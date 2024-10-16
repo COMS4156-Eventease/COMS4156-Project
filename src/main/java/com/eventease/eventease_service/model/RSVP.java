@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "RSVP")
-@IdClass(RSVP.class)
+@IdClass(RSVPKey.class)
 public class RSVP {
   @Id
   @ManyToOne
