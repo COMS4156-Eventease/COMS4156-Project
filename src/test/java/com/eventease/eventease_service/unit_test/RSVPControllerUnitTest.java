@@ -118,10 +118,4 @@ public class RSVPControllerUnitTest {
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     assertEquals("RSVP Not Found", response.getBody());
   }
-
-
-
-
-
-
 }

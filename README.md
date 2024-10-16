@@ -23,6 +23,7 @@ Repository for COMS 4156 24F, Team Scrum Masters
 * Expected Output: RSVP Object
 * Upon Success: HTTP 201 Status Code is returned 
 * Upon Failure: 
+  * HTTP 400 Status Code is retunred with the message indicating RSVP already exists
   * HTTP 404 Status Code is returned along with the message indicating user or event not found.
   * HTTP 500 Internal Server Error for other issues
 

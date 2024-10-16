@@ -1,6 +1,7 @@
 package com.eventease.eventease_service.controller;
 
 import com.eventease.eventease_service.exception.EventNotExistException;
+import com.eventease.eventease_service.exception.RSVPExistsException;
 import com.eventease.eventease_service.exception.RSVPNotExistException;
 import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.Event;
@@ -43,6 +44,8 @@ public class RSVPController {
       return new ResponseEntity<>(createdRSVP, HttpStatus.CREATED);
     } catch (EventNotExistException | UserNotExistException error) {
       return new ResponseEntity<>(error.getMessage(), HttpStatus.NOT_FOUND);
+    } catch (RSVPExistsException error) {
+      return new ResponseEntity<>(error.getMessage(), HttpStatus.BAD_REQUEST);
     } catch (Exception e) {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }

@@ -1,5 +1,6 @@
 package com.eventease.eventease_service.service;
 
+import com.eventease.eventease_service.exception.RSVPExistsException;
 import com.eventease.eventease_service.exception.RSVPNotExistException;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.RSVP;
@@ -30,6 +31,10 @@ public class RSVPService {
   public RSVP createRSVP(String eventId, String userId, RSVP rsvp) {
     Event event = eventService.findById(Long.parseLong(eventId));
     User user = userService.findUserById(Long.parseLong(userId));
+    Optional<RSVP> rsvpCheck= rsvpRepository.findByUserAndEvent(user, event);
+    if(rsvpCheck.isPresent()) {
+      throw (new RSVPExistsException("RSVP Already Exists"));
+    }
     rsvp.setEvent(event);
     rsvp.setUser(user);
     return rsvpRepository.save(rsvp);
