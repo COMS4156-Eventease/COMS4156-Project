@@ -1,6 +1,7 @@
 package com.eventease.eventease_service.controller;
 
 import com.eventease.eventease_service.exception.EventNotExistException;
+import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.service.EventService;
@@ -44,9 +45,9 @@ public class EventController {
   ) {
     try {
       User organizer = userService.findUserById(organizerId);
-      if (organizer == null) {
-        return new ResponseEntity<>("Organizer not found", HttpStatus.NOT_FOUND);
-      }
+//      if (organizer == null) {
+//        return new ResponseEntity<>("Organizer not found", HttpStatus.NOT_FOUND);
+//      }
 
       event.setHost(organizer);
 
@@ -57,6 +58,8 @@ public class EventController {
       response.put("eventId", event.getId());
 
       return new ResponseEntity<>(response, HttpStatus.CREATED);
+    } catch (UserNotExistException e) {
+      return new ResponseEntity<>("Organizer not found", HttpStatus.NOT_FOUND);
     } catch (Exception e) {
       return new ResponseEntity<>("Error creating event: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -68,12 +71,17 @@ public class EventController {
     try {
       // Retrieve the event by ID using the service
       Event event = eventService.findById(eventId);
-
+//      if (event == null) {
+//        return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
+//      }
       // Return the event details if found
       return new ResponseEntity<>(event, HttpStatus.OK);
-    } catch (Exception e) {
-      // If the event is not found or any other exception occurs
+    } catch (EventNotExistException e) {
+      // If the event is not found
       return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
+    } catch (Exception e) {
+      // Handle any other unexpected exceptions
+      return new ResponseEntity<>("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -109,9 +117,9 @@ public class EventController {
 
     try {
       Event existingEvent = eventService.findById(eventId);
-      if (existingEvent == null) {
-        return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
-      }
+//      if (existingEvent == null) {
+//        return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
+//      }
 
       eventService.updateEvent(eventId, updatedEvent);
       return new ResponseEntity<>("Event updated successfully", HttpStatus.OK);
