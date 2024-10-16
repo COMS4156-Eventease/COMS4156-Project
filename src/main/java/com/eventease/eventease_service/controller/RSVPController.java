@@ -86,7 +86,7 @@ public class RSVPController {
       rsvpService.cancelRSVP(eventId, userId);
       return new ResponseEntity<>("RSVP successfully cancelled", HttpStatus.OK);
     } catch (RSVPNotExistException error) {
-      return new ResponseEntity<>("RSVP not exist", HttpStatus.NOT_FOUND);
+      return new ResponseEntity<>("RSVP Not Found", HttpStatus.NOT_FOUND);
     } catch (EventNotExistException | UserNotExistException error){
       return new ResponseEntity<>(error.getMessage(), HttpStatus.NOT_FOUND);
     }
