@@ -8,5 +8,13 @@ import java.util.List;
 
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
-    List<Task> findByEventId(Long eventId);
+
+    Task findById(long id);
+
+    List<Task> findByAssignedUserId(long userId);
+
+    List<Task> findByEventId(long eventId);
+
+    //List<Task> findByStatus(Task.TaskStatus status);
+    //List<Task> findByDueDateBefore(java.sql.Timestamp dueDate);
 }
