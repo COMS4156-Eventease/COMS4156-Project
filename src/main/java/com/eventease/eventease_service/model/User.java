@@ -16,12 +16,17 @@ import jakarta.persistence.Table;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import java.sql.Timestamp;
 
 @Entity
 @Table(name = "user")
 @JsonDeserialize(builder = User.Builder.class)
+@Getter
+@Setter
 public class User implements Serializable {
   @Serial
   private static final long serialVersionUID = 100001L;
@@ -30,10 +35,34 @@ public class User implements Serializable {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @JsonProperty("firstName")
+  private String firstName;
+
+  @JsonProperty("lastName")
+  private String lastName;
+
+  @JsonProperty("username")
   private String username;
 
-  @JsonIgnore //only want to show username
+  @JsonProperty("password")
+  @JsonIgnore
   private String password;
+
+  @JsonProperty("email")
+  private String email;
+
+  @JsonProperty("phoneNumber")
+  private String phoneNumber;
+
+  @Enumerated(EnumType.STRING)
+  @JsonProperty("role")
+  private Role role;
+
+  @JsonProperty("createdAt")
+  private Timestamp createdAt;
+
+  @JsonProperty("updatedAt")
+  private Timestamp updatedAt;
 
   @OneToMany(mappedBy = "host", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Event> createdEvents = new HashSet<>();
@@ -52,46 +81,6 @@ public class User implements Serializable {
   public User(Builder builder) {
     this.username = builder.username;
     this.password = builder.password;
-  }
-
-  public Long getId() {
-    return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public String getUsername() {
-    return username;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
-  }
-
-  public String getPassword() {
-    return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
-  public Set<Event> getCreatedEvents() {
-    return createdEvents;
-  }
-
-  public void setCreatedEvents(Set<Event> createdEvents) {
-    this.createdEvents = createdEvents;
-  }
-
-  public Set<Event> getAttendedEvents() {
-    return attendedEvents;
-  }
-
-  public void setAttendedEvents(Set<Event> attendedEvents) {
-    this.attendedEvents = attendedEvents;
   }
 
   // helper
@@ -119,11 +108,34 @@ public class User implements Serializable {
     @JsonProperty("id")
     private Long id;
 
+    @JsonProperty("firstName")
+    private String firstName;
+
+    @JsonProperty("lastName")
+    private String lastName;
+
     @JsonProperty("username")
     private String username;
 
     @JsonProperty("password")
+    @JsonIgnore
     private String password;
+
+    @JsonProperty("email")
+    private String email;
+
+    @JsonProperty("phoneNumber")
+    private String phoneNumber;
+
+    @Enumerated(EnumType.STRING)
+    @JsonProperty("role")
+    private Role role;
+
+    @JsonProperty("createdAt")
+    private Timestamp createdAt;
+
+    @JsonProperty("updatedAt")
+    private Timestamp updatedAt;
 
     @JsonProperty("createdEvents")
     private Set<Event> createdEvents = new HashSet<>();
@@ -161,5 +173,9 @@ public class User implements Serializable {
     public User build() {
       return new User(this);
     }
+  }
+
+  public enum Role {
+    ELDERLY, CAREGIVER, ORGANIZER, PLANNER
   }
 }

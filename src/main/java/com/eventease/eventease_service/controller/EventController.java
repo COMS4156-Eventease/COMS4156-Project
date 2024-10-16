@@ -3,7 +3,6 @@ package com.eventease.eventease_service.controller;
 import com.eventease.eventease_service.exception.EventNotExistException;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.User;
-import com.eventease.eventease_service.repository.EventRepository;
 import com.eventease.eventease_service.service.EventService;
 import com.eventease.eventease_service.service.UserService;
 import java.time.LocalDate;
@@ -26,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/api/events")
 public class EventController {
   private EventService eventService;
   private UserService userService;
