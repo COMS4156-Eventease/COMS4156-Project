@@ -38,7 +38,7 @@ public class EventService {
   // @Transactional with readOnly = true marks this method as transactional, optimized for read operations
   @Transactional(readOnly = true)
   public List<Event> findByDateBetween(LocalDate startDate, LocalDate endDate) {
-    return eventRepository.findByDateBetween(startDate, endDate);
+    return eventRepository.findEventsByDateRange(startDate, endDate);
   }
 
   // Updates an existing event using the Builder pattern to ensure immutability
@@ -48,22 +48,20 @@ public class EventService {
       throw new EventNotExistException("Event not found");
     }
 
-    // Use the builder to update only the fields that are not null
-    Event updated = new Event.Builder()
-        .setId(existingEvent.getId())  // Keep the original ID
-        .setName(updatedEvent.getName() != null ? updatedEvent.getName() : existingEvent.getName())
-        .setDescription(updatedEvent.getDescription() != null ? updatedEvent.getDescription() : existingEvent.getDescription())
-        .setLocation(updatedEvent.getLocation() != null ? updatedEvent.getLocation() : existingEvent.getLocation())
-        .setDate(updatedEvent.getDate() != null ? updatedEvent.getDate() : existingEvent.getDate())
-        .setTime(updatedEvent.getTime() != null ? updatedEvent.getTime() : existingEvent.getTime())
-        .setCapacity(updatedEvent.getCapacity() > 0 ? updatedEvent.getCapacity() : existingEvent.getCapacity())
-        .setBudget(updatedEvent.getBudget() > 0 ? updatedEvent.getBudget() : existingEvent.getBudget())
-        .setHost(existingEvent.getHost())  // Keep the original host
-        .setParticipants(existingEvent.getParticipants())  // Keep the original participants
-        .build();
+    // Update fields of the existing event in place
+    existingEvent.setName(updatedEvent.getName() != null ? updatedEvent.getName() : existingEvent.getName());
+    existingEvent.setDescription(updatedEvent.getDescription() != null ? updatedEvent.getDescription() : existingEvent.getDescription());
+    existingEvent.setLocation(updatedEvent.getLocation() != null ? updatedEvent.getLocation() : existingEvent.getLocation());
+    existingEvent.setDate(updatedEvent.getDate() != null ? updatedEvent.getDate() : existingEvent.getDate());
+    existingEvent.setTime(updatedEvent.getTime() != null ? updatedEvent.getTime() : existingEvent.getTime());
+    existingEvent.setCapacity(updatedEvent.getCapacity() > 0 ? updatedEvent.getCapacity() : existingEvent.getCapacity());
+    existingEvent.setBudget(updatedEvent.getBudget() > 0 ? updatedEvent.getBudget() : existingEvent.getBudget());
+    // Retain the original host and participants
+    existingEvent.setHost(existingEvent.getHost());
+    existingEvent.setParticipants(existingEvent.getParticipants());
 
     // Save the updated event back to the repository
-    eventRepository.save(updated);
+    eventRepository.save(existingEvent);
   }
 
   // @Transactional with Isolation.SERIALIZABLE ensures the highest level of isolation
