@@ -38,7 +38,8 @@ public class EventService {
   // @Transactional with readOnly = true marks this method as transactional, optimized for read operations
   @Transactional(readOnly = true)
   public List<Event> findByDateBetween(LocalDate startDate, LocalDate endDate) {
-    return eventRepository.findEventsByDateRange(startDate, endDate);
+    List<Event> events = eventRepository.findEventsByDateRange(startDate, endDate);
+    return events;
   }
 
   // Updates an existing event using the Builder pattern to ensure immutability

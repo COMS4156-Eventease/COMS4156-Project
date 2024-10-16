@@ -75,14 +75,14 @@ Repository for COMS 4156 24F, Team Scrum Masters
   * Path Parameter:
     * eventId (Long): The ID of the event to update.
   * Request Body:
-      * event (Object):
-          * name (String): Name of the event.
-          * description (String): Description of the event.
-          * location (String): Location where the event is held.
-          * date (String): The date of the event (in YYYY-MM-DD format).
-          * time (String): The time of the event (in HH:MM format).
-          * capacity (int): Maximum number of participants allowed.
-          * budget (int): Budget for the event.
+    * event (Object):
+      * name (String): Name of the event.
+      * description (String): Description of the event.
+      * location (String): Location where the event is held.
+      * date (String): The date of the event (in YYYY-MM-DD format).
+      * time (String): The time of the event (in HH:MM format).
+      * capacity (int): Maximum number of participants allowed.
+      * budget (int): Budget for the event.
 * Expected Output: A string indicating the result of the operation.
 * Operation: Updates the specified event's details. Only the provided fields will be updated.
 * Upon Success:
