@@ -27,3 +27,16 @@
 #     FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE,
 #     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
 # );
+
+# -- Table for tasks
+# CREATE TABLE IF NOT EXISTS task (
+#     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+#     name VARCHAR(255) NOT NULL,
+#     description TEXT,
+#     status ENUM('PENDING', 'COMPLETED', 'IN_PROGRESS', 'CANCELLED') DEFAULT 'PENDING',
+#     due_date TIMESTAMP,
+#     assigned_user_id BIGINT,
+#     event_id BIGINT NOT NULL,
+#     FOREIGN KEY (assigned_user_id) REFERENCES user(id) ON DELETE SET NULL,
+#     FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE
+# );
