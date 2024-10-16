@@ -16,12 +16,26 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * The contrller class contains the RSVP management endpoints
+ */
 @RequestMapping("/events/{eventId}/")
 @RestController
 public class RSVPController {
   @Autowired
   private RSVPService rsvpService;
 
+  /**
+   * Endpoint for creating an RSVP for a user to an event
+   * This method handles POST requests to create the RSVP for a user to an event;
+   *
+   * @param eventId                 the ID of the event
+   * @param userId                  the ID of the user making the RSVP
+   *
+   * @return                          a ResponseEntity with successful message
+   *                                  or an error message if the event is not found
+   *                                  or an error message if the user is not found
+   */
   @RequestMapping(value = "/rsvp/{userId}", method = RequestMethod.POST)
   public ResponseEntity<?> createRSVP(@PathVariable String eventId, @PathVariable String userId, @RequestBody RSVP rsvp) {
     try {
@@ -34,6 +48,16 @@ public class RSVPController {
     }
   }
 
+
+  /**
+   * Endpoint for creating an RSVP for a user to an event
+   * This method handles GET requests to retrieve the list of RSVPs to an event;
+   *
+   * @param eventId                 the ID of the event
+   *
+   * @return                          a ResponseEntity with successful message
+   *                                  or an error message if the event is not found
+   */
   @RequestMapping(value = "/attendees", method = RequestMethod.GET)
   public ResponseEntity<?> getAttendee(@PathVariable String eventId) {
     try {
@@ -46,6 +70,16 @@ public class RSVPController {
     }
   }
 
+  /**
+   * Endpoint for delete an RSVP for a user to an event
+   * This method handles DELETE requests to delete an RSVP of a user to an event;
+   *
+   * @param eventId                 the ID of the event
+   * @param userId                  the ID of the user making the RSVP
+   *
+   * @return                          a ResponseEntity with successful message
+   *                                  or an error message if the event is not found
+   */
   @RequestMapping(value = "/rsvp/cancel/{userId}", method = RequestMethod.DELETE)
   public ResponseEntity<?> cancelRSVP(@PathVariable String eventId, @PathVariable String userId) {
     try{
