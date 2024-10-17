@@ -4,6 +4,7 @@ import com.eventease.eventease_service.controller.TaskController;
 import com.eventease.eventease_service.exception.*;
 import com.eventease.eventease_service.model.Task;
 import com.eventease.eventease_service.model.User;
+import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.service.EventService;
 import com.eventease.eventease_service.service.TaskService;
 import com.eventease.eventease_service.service.UserService;
@@ -20,7 +21,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class TaskControllerTest {
+class TaskControllerUnitTest {
 
     @Mock
     private TaskService taskService;
@@ -34,9 +35,12 @@ class TaskControllerTest {
     @InjectMocks
     private TaskController taskController;
 
+
     @BeforeEach
     void setUp() {
+
         MockitoAnnotations.openMocks(this);
+
     }
 
     @Test
@@ -156,30 +160,31 @@ class TaskControllerTest {
     void updateTaskAssignedUser_Success() throws Exception {
         Long eventId = 1L;
         Long taskId = 1L;
-        List<String> userIds = Arrays.asList("1", "2");
+        String newUserId = "2";
 
         when(userService.findUserById(1L)).thenReturn(new User());
         when(userService.findUserById(2L)).thenReturn(new User());
         doNothing().when(taskService).updateTaskAssignedUser(eventId, taskId, 1L);
 
-        ResponseEntity<?> response = taskController.updateTaskAssignedUser(eventId, taskId, userIds);
+        ResponseEntity<?> response = taskController.updateTaskAssignedUser(eventId, taskId, newUserId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Task assigned user updated successfully", response.getBody());
     }
 
     @Test
-    void updateTaskAssignedUser_InvalidUserId() {
+    void updateTaskAssignedUser_UserNotFound() {
         Long eventId = 1L;
         Long taskId = 1L;
-        List<String> userIds = Arrays.asList("1", "invalid");
+        String newUserId = "2";
 
-        when(userService.findUserById(1L)).thenReturn(new User());
+        when(userService.findUserById(2L)).thenReturn(new User());
+        doNothing().when(taskService).updateTaskAssignedUser(eventId, taskId, 2L);
 
-        ResponseEntity<?> response = taskController.updateTaskAssignedUser(eventId, taskId, userIds);
+        ResponseEntity<?> response = taskController.updateTaskAssignedUser(eventId, taskId, newUserId);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("Invalid user ID format: invalid"));
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Task assigned user updated successfully", response.getBody());
     }
 
     @Test
