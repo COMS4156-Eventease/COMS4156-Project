@@ -1,85 +1,49 @@
 package com.eventease.eventease_service.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.*;
-import java.io.Serial;
-import java.io.Serializable;
-import java.sql.Timestamp;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "task")
+@Table(name = "tasks")
+@Data
 @Getter
 @Setter
-public class Task implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 100002L;
+@NoArgsConstructor
+@AllArgsConstructor
+public class Task {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JsonProperty("name")
+    @NotBlank(message = "Task name is required")
     @Column(nullable = false)
     private String name;
 
-    @JsonProperty("description")
     private String description;
 
-    @JsonProperty("status")
+    @NotNull(message = "Task status is required")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TaskStatus status;
 
-    @JsonProperty("dueDate")
-    private Timestamp dueDate;
+    private LocalDateTime dueDate;
 
-    @JsonProperty("createdAt")
-    private Timestamp createdAt;
-
-    @JsonProperty("updatedAt")
-    private Timestamp updatedAt;
-
-    // a task is assigned to a specific user (user creates many tasks)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnore
-    private User assignedUser;
-
-    // a task belongs to an event (many tasks for one event)
+    @NotNull(message = "Event is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    public Task() {};
-
-    public Task(String name, String description, TaskStatus status, Timestamp dueDate, User assignedUser, Event event) {
-        this.name = name;
-        this.description = description;
-        this.status = status;
-        this.dueDate = dueDate;
-        this.assignedUser = assignedUser;
-        this.event = event;
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = new Timestamp(System.currentTimeMillis());
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = new Timestamp(System.currentTimeMillis());
-    }
+    @NotNull(message = "Assigned user is required")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_user_id", nullable = false)
+    private User assignedUser;
 
     public enum TaskStatus {
-        PENDING,
-        COMPLETED,
-        IN_PROGRESS,
-        CANCELLED
+        PENDING, IN_PROGRESS, COMPLETED, CANCELLED
     }
 }

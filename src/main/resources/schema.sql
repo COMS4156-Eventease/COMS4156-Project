@@ -37,6 +37,6 @@
 #     due_date TIMESTAMP,
 #     assigned_user_id BIGINT,
 #     event_id BIGINT NOT NULL,
-#     FOREIGN KEY (assigned_user_id) REFERENCES user(id) ON DELETE SET NULL,
+#     FOREIGN KEY (assigned_user_id) REFERENCES user(id) ON DELETE CASCADE,
 #     FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE
 # );
