@@ -92,26 +92,20 @@ public class TaskController {
     @PatchMapping("/{taskId}/user")
     public ResponseEntity<?> updateTaskAssignedUser(@PathVariable Long eventId,
                                                     @PathVariable Long taskId,
-                                                    @RequestBody List<String> userIds) {
+                                                    @RequestBody String userId) {
         try {
-            // First, validate all user IDs
-            for (String userId : userIds) {
-                try {
-                    Long id = Long.parseLong(userId);
-                    userService.findUserById(id);
-                } catch (NumberFormatException e) {
-                    throw new UserNotExistException("Invalid user ID format: " + userId);
-                } catch (UserNotExistException e) {
-                    return new ResponseEntity<>("User not found with ID: " + userId, HttpStatus.NOT_FOUND);
-                }
+            Long newUserId = Long.parseLong(userId);
+            try {
+                userService.findUserById(newUserId);
+            } catch (UserNotExistException e) {
+                return new ResponseEntity<>("User not found with ID: " + userId, HttpStatus.NOT_FOUND);
             }
-            Long newUserId = Long.parseLong(userIds.get(0));
             taskService.updateTaskAssignedUser(eventId, taskId, newUserId);
             return new ResponseEntity<>("Task assigned user updated successfully", HttpStatus.OK);
         } catch (TaskNotExistException | EventNotExistException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error updating task assigned user: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error deleting task: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

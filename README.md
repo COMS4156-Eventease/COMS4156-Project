@@ -192,7 +192,7 @@ Repository for COMS 4156 24F, Team Scrum Masters
     * eventId (String): The ID of the event containing the task that is being updated.
     * taskId (String): The ID of the specific task being updated.
   * Query Parameters:
-    * userIds (List<String>): A list of user IDs.
+    * userId (String): User ID to be assigned task to.
 * Upon Success:
   * HTTP 200 Status Code with task and its respective details.
 * Upon Failure:
