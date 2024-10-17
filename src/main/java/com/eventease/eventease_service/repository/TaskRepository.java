@@ -2,19 +2,31 @@ package com.eventease.eventease_service.repository;
 
 import com.eventease.eventease_service.model.Task;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
-    Task findById(long id);
+    Optional<Task> findById(Long id);
 
-    List<Task> findByAssignedUserId(long userId);
+    List<Task> findByEventId(Long eventId);
 
-    List<Task> findByEventId(long eventId);
+    Optional<Task> findByIdAndEventId(Long taskId, Long eventId);
 
-    //List<Task> findByStatus(Task.TaskStatus status);
-    //List<Task> findByDueDateBefore(java.sql.Timestamp dueDate);
+    @Modifying
+    @Query("UPDATE Task t SET t.status = :status WHERE t.id = :taskId AND t.event.id = :eventId")
+    int updateTaskStatus(Long taskId, Long eventId, Task.TaskStatus status);
+
+    @Modifying
+    @Query("UPDATE Task t SET t.assignedUser.id = :userId WHERE t.id = :taskId AND t.event.id = :eventId")
+    int updateTaskAssignedUser(Long taskId, Long eventId, Long userId);
+
+    void deleteByIdAndEventId(Long taskId, Long eventId);
+
+    List<Task> findByAssignedUserId(Long userId);
 }
