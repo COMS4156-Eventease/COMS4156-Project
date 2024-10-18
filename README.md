@@ -1,6 +1,11 @@
 # COMS4156-Project
 Repository for COMS 4156 24F, Team Scrum Masters 
 
+EventEase is a flexible RESTful service designed to simplify and automate the complexities of event management. EventEase offers a seamless solution to manage everything from event creation to event registration. With endpoints for task management, RSVP handling, and real-time reporting, EventEase empowers various applications with robust event management capabilities, allowing organizers and hosters to focus on delivering great user experiences. EventEase API makes it easy to integrate sophisticated event planning tools into any system, no matter the size or scope of your event.
+
+To distinguish from regular event-management services and make it useful for elderly users, Eventease provides SMS and email reminders for events, allowing elderly users to stay informed without relying on complex apps. Additionally, a simple RSVP system could be integrated, enabling one-click RSVP via email or SMS, reducing the need for navigating complicated interfaces. The API would also support caregiver collaboration, allowing caregivers to manage event details, send RSVPs, or receive notifications on behalf of elderly users. Lastly, an option for simplified, large-text invitations or event details could be offered to ensure better accessibility for users with vision impairments or low digital literacy.
+
+
 ## Technologies Used
 - **Spring Boot**: 
 - **Spring MVC**: For structuring the application with the MVC pattern.
@@ -24,10 +29,12 @@ cd COMS4156-Project
 ```
 ## Building and running a local instance
 
-To build and run the service, install the following (instructions are for Windows, but Maven README includes Mac instructions):
+The instructions below are for Ubuntu 24.04, however they should be the same for all platforms supported by Java and MySQL.
+To build and run the service, install the following:
 
 - **Maven 3.9.5**: [Download Maven](https://maven.apache.org/download.cgi) and follow the installation steps. Ensure the `bin` directory is added to your system's path.
 - **JDK 17**: [Download JDK 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html), as it is the recommended version for this project.
+- **MySQL 8.0**: [Download MySQL](https://dev.mysql.com/downloads/mysql/) and follow the installation steps. Ensure the `bin` directory is added to your system's path.
 - **IntelliJ IDE**: [Download IntelliJ](https://www.jetbrains.com/idea/download/?section=windows) or use any IDE you prefer.
 
 
@@ -66,6 +73,21 @@ Run code style checks:
 mvn checkstyle:check
 ```
 
+
+# Automated CI/CD Pipeline
+
+This project has an automatic CI/CD pipeline set up using GitHub Actions. The pipeline is triggered on every commit and pull request across the repository.
+
+The pipeline does the following:
+- Compile the Java application
+- Run unit tests using `mvn test`
+- Runs and publishes a JaCoCo test coverage report as an artifact
+- Checks code style using Checkstyle
+
+
+# Development lifecycle
+
+For every new feature, a new branch should be created. Once that branch is ready to be merged, at least one other maintainer will need to approve it before it is able to be merged. 
 
 
 # Postman Test Documentation 
@@ -272,7 +294,7 @@ The Postman test published documentation can be found in this link
   * HTTP 404 Status Code is returned along with the message indicating event or task not found.
   * HTTP 500 Internal Server Error for other issues.
 
-### User Management 
+## User Management
 
 ### POST /api/users/add
 * Adds a new user to the system.
@@ -281,13 +303,15 @@ The Postman test published documentation can be found in this link
     * firstName (String): The first name of the user.
     * lastName (String): The last name of the user.
     * email (String): The email address of the user.
+    * phone (String, optional): The phone number of the user.
+    * role (String, optional): The role of the user (e.g., ADMIN, USER).
 * Upon Success:
   * HTTP 200 Status Code with the message "User saved successfully."
 * Upon Failure:
   * HTTP 400 Bad Request for invalid input data.
   * HTTP 500 Internal Server Error for other issues.
 
----
+
 
 ### GET /api/users/list
 * Retrieves a list of users based on filter criteria.
@@ -295,37 +319,42 @@ The Postman test published documentation can be found in this link
   * Query Parameters:
     * firstName (String, optional): The first name to filter users.
     * lastName (String, optional): The last name to filter users.
+    * email (String, optional): The email address to filter users.
+    * phone (String, optional): The phone number to filter users.
+    * role (String, optional): The role to filter users (e.g., ADMIN, USER).
 * Upon Success:
   * HTTP 200 Status Code with a list of users.
 * Upon Failure:
   * HTTP 500 Internal Server Error for other issues.
 
----
 
-### PATCH /api/users/update/{userId}
+
+### PATCH /api/users/update/{id}
 * Updates an existing user's details.
 * Expected Input Parameters:
   * Path Parameters:
-    * userId (Long): The ID of the user to be updated.
+    * id (Long): The ID of the user to be updated.
   * Request Body (JSON):
     * firstName (String, optional): The new first name of the user.
     * lastName (String, optional): The new last name of the user.
+    * email (String, optional): The new email address of the user.
+    * phone (String, optional): The new phone number of the user.
+    * role (String, optional): The new role of the user (e.g., ADMIN, USER).
 * Upon Success:
   * HTTP 200 Status Code with the message "User updated successfully."
 * Upon Failure:
   * HTTP 404 Status Code if the user is not found.
   * HTTP 500 Internal Server Error for other issues.
 
----
 
-### DELETE /api/users/delete/{userId}
+
+### DELETE /api/users/delete/{id}
 * Deletes a specific user from the system.
 * Expected Input Parameters:
   * Path Parameters:
-    * userId (Long): The ID of the user to be deleted.
+    * id (Long): The ID of the user to be deleted.
 * Upon Success:
   * HTTP 200 Status Code with the message "User deleted successfully."
 * Upon Failure:
   * HTTP 404 Status Code if the user is not found.
   * HTTP 500 Internal Server Error for other issues.
-
