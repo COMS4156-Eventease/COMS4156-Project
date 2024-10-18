@@ -94,7 +94,7 @@ Repository for COMS 4156 24F, Team Scrum Masters
 
 ### RSVP Management 
 
-#### POST /events/{eventId}/rsvp/{userId}
+#### POST /api/events/{eventId}/rsvp/{userId}
 * POST RSVP for an event
 * Expected Path Variables: eventId (String), userId(String)
 * Expected Output: RSVP Object
@@ -104,7 +104,7 @@ Repository for COMS 4156 24F, Team Scrum Masters
   * HTTP 404 Status Code is returned along with the message indicating user or event not found.
   * HTTP 500 Internal Server Error for other issues
 
-#### GET /events/{eventId}/attendees
+#### GET /api/events/{eventId}/attendees
 * Retrieves the list of attendees for a given event, identified by eventId.
 * Expected Path Variables: eventId (String)
 * Expected Output: List of RSVP Object
@@ -113,7 +113,7 @@ Repository for COMS 4156 24F, Team Scrum Masters
   * HTTP 404 Status Code is returned if the event is not found.
   * HTTP 500 Internal Server Error for other issues
 
-#### DELETE /events/{eventId}/rsvp/cancel/{userId}
+#### DELETE /api/events/{eventId}/rsvp/cancel/{userId}
 * Cancels an RSVP for a user to a specified event.
 * Expected Path Variables: eventId (String), userId(String)
 * Expected Output: Success Message (String)
