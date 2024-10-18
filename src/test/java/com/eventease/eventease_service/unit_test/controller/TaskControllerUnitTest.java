@@ -1,4 +1,4 @@
-package com.eventease.eventease_service.unit_test.conrtoller;
+package com.eventease.eventease_service.unit_test.controller;
 
 import com.eventease.eventease_service.controller.TaskController;
 import com.eventease.eventease_service.exception.*;
