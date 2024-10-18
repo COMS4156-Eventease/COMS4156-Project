@@ -1,0 +1,71 @@
+# This workflow builds and runs on any commit and any pull request:
+# - All unit tests
+# - Jacoco code coverage report
+# - checkstyle
+
+# This file is built from the default GitHub Actions workflow for Maven
+# as a base, but modified to suit the needs of the project.
+
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: test
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Wait for MySQL
+        run: |
+          until mysqladmin ping -h 127.0.0.1 -P 3306 -u root -proot --silent; do
+            echo "Waiting for MySQL to be available..."
+            sleep 5
+          done
+
+      - name: Create test database
+        run: mysql -h 127.0.0.1 -P 3306 -u root -proot -e "CREATE DATABASE IF NOT EXISTS test;"
+
+      - name: Compile
+        run: mvn compile
+
+      - name: Run unit tests
+        run: mvn test
+
+      - name: Run Jacoco code coverage report
+        run: mvn jacoco:report
+
+      - name: Upload Jacoco code coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: ./IndividualProject/target/site/jacoco
+
+      - name: Run checkstyle
+        run: mvn checkstyle:check

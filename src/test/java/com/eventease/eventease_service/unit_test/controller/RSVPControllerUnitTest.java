@@ -1,4 +1,4 @@
-package com.eventease.eventease_service.unit_test;
+package com.eventease.eventease_service.unit_test.controller;
 
 
 import com.eventease.eventease_service.controller.RSVPController;

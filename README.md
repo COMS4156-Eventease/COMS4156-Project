@@ -1,18 +1,79 @@
 # COMS4156-Project
 Repository for COMS 4156 24F, Team Scrum Masters 
 
+## Technologies Used
+- **Spring Boot**: 
+- **Spring MVC**: For structuring the application with the MVC pattern.
+- **MySQL**: As the relational database for data storage.
+
+
+
+### Installation 
+
 ## Prerequisite
 - **Java 17**
 - **Maven**
 - **Spring Boot 3.3.4**
 - **Ubuntu 24**
   
-## Technologies Used
-- **Spring Boot**: 
-- **Spring MVC**: For structuring the application with the MVC pattern.
-- **MySQL**: As the relational database for data storage.
+## Installing the Repository
+Open the terminal in the folder in which you wish to clone the repository and enter the following command:
+```
+git clone https://github.com/LouisLu00/COMS4156-Project.git
+cd COMS4156-Project
+```
+## Building and running a local instance
 
-## Endpoints
+To build and run the service, install the following (instructions are for Windows, but Maven README includes Mac instructions):
+
+- **Maven 3.9.5**: [Download Maven](https://maven.apache.org/download.cgi) and follow the installation steps. Ensure the `bin` directory is added to your system's path.
+- **JDK 17**: [Download JDK 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html), as it is the recommended version for this project.
+- **IntelliJ IDE**: [Download IntelliJ](https://www.jetbrains.com/idea/download/?section=windows) or use any IDE you prefer.
+
+
+## Changes to be done before starting the Springboot application
+
+## Start your MySQL server
+
+The below command is for Ubuntu
+``` bash
+sudo systemctl start mysql
+mysql -u root -p
+```
+
+## Changing application.properties
+Going to the application.properties in the directory src/main/resources and updating application.properties with your username and password 
+
+``` bash
+# UPDATE THIS BELOW ACCORDING TO YOUR SETTINGS
+spring.datasource.username=root
+spring.datasource.passWord=root 
+```
+
+To run the application, use:
+```bash
+mvn spring-boot:run 
+```
+
+## For creating a test coverage report and code style check
+Generate test coverage report:
+```bash
+mvn jacoco:report
+```
+
+Run code style checks:
+```
+mvn checkstyle:check
+```
+
+
+
+# Postman Test Documentation 
+
+The Postman test published documentation can be found in this link
+
+
+## Created Endpoints
 ### Event Management
 #### POST /api/events
 * Expected Input Parameters:
@@ -212,4 +273,59 @@ Repository for COMS 4156 24F, Team Scrum Masters
   * HTTP 500 Internal Server Error for other issues.
 
 ### User Management 
+
+### POST /api/users/add
+* Adds a new user to the system.
+* Expected Input Parameters:
+  * Request Body (JSON):
+    * firstName (String): The first name of the user.
+    * lastName (String): The last name of the user.
+    * email (String): The email address of the user.
+* Upon Success:
+  * HTTP 200 Status Code with the message "User saved successfully."
+* Upon Failure:
+  * HTTP 400 Bad Request for invalid input data.
+  * HTTP 500 Internal Server Error for other issues.
+
+---
+
+### GET /api/users/list
+* Retrieves a list of users based on filter criteria.
+* Expected Input Parameters:
+  * Query Parameters:
+    * firstName (String, optional): The first name to filter users.
+    * lastName (String, optional): The last name to filter users.
+* Upon Success:
+  * HTTP 200 Status Code with a list of users.
+* Upon Failure:
+  * HTTP 500 Internal Server Error for other issues.
+
+---
+
+### PATCH /api/users/update/{userId}
+* Updates an existing user's details.
+* Expected Input Parameters:
+  * Path Parameters:
+    * userId (Long): The ID of the user to be updated.
+  * Request Body (JSON):
+    * firstName (String, optional): The new first name of the user.
+    * lastName (String, optional): The new last name of the user.
+* Upon Success:
+  * HTTP 200 Status Code with the message "User updated successfully."
+* Upon Failure:
+  * HTTP 404 Status Code if the user is not found.
+  * HTTP 500 Internal Server Error for other issues.
+
+---
+
+### DELETE /api/users/delete/{userId}
+* Deletes a specific user from the system.
+* Expected Input Parameters:
+  * Path Parameters:
+    * userId (Long): The ID of the user to be deleted.
+* Upon Success:
+  * HTTP 200 Status Code with the message "User deleted successfully."
+* Upon Failure:
+  * HTTP 404 Status Code if the user is not found.
+  * HTTP 500 Internal Server Error for other issues.
 

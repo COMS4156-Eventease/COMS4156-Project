@@ -1,4 +1,4 @@
-package com.eventease.eventease_service.unit_test.conrtoller;
+package com.eventease.eventease_service.unit_test.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
