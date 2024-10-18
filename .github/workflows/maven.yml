@@ -51,6 +51,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install libcurl4-openssl-dev libmysqlclient-dev libgirepository1.0-dev
 
+      - name: Set up MySQL
+        run: |
+          mysql --version
+          mysql --user=root --password=root --port=3306 --execute "CREATE DATABASE IF NOT EXISTS test;"
+
       - name: Compile
         run: mvn compile
 
