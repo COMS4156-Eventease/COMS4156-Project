@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.eventease.eventease_service.controller.EventController;
 import com.eventease.eventease_service.exception.EventNotExistException;
+import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.repository.EventRepository;
@@ -62,7 +63,7 @@ public class EventControllerUnitTest {
 
   @Test
   public void addEventFailTest() throws Exception {
-    when(userService.findUserById(1L)).thenReturn(null);
+    when(userService.findUserById(1L)).thenThrow(new UserNotExistException("User is not found"));
 
     mockMvc.perform(post("/api/events?organizerId=1")
             .contentType(MediaType.APPLICATION_JSON)
