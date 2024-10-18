@@ -25,12 +25,12 @@ jobs:
           MYSQL_DATABASE: test
           MYSQL_ROOT_PASSWORD: root
         ports:
-          - 3307:3306 
-        options: > 
-          --health-cmd="mysqladmin ping --silent" 
-          --health-interval=10s 
-          --health-timeout=5s 
-          --health-retries=5 
+          - 3307:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - uses: actions/checkout@v4
@@ -42,21 +42,15 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Install dependencies for MySQL
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libmysqlclient-dev
-
-      # Wait for MySQL to be ready before proceeding
       - name: Wait for MySQL
         run: |
-          until mysqladmin ping --host=localhost --user=root --password=root --port=3306 --silent; do
+          until mysqladmin ping -h 127.0.0.1 -P 3307 -u root -proot --silent; do
             echo "Waiting for MySQL to be available..."
             sleep 5
           done
 
       - name: Create test database
-        run: mysql --host=localhost --user=root --password=root --port=3306 --execute "CREATE DATABASE IF NOT EXISTS test;"
+        run: mysql -h 127.0.0.1 -P 3307 -u root -proot -e "CREATE DATABASE IF NOT EXISTS test;"
 
       - name: Compile
         run: mvn compile
