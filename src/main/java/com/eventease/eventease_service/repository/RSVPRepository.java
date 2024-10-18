@@ -10,6 +10,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Repository for the RSVP class, which represents a user's response to an event.
+ */
 @Repository
 public interface RSVPRepository extends JpaRepository<RSVP, RSVPKey> {
 

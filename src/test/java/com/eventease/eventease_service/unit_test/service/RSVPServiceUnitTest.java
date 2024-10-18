@@ -23,7 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-
+/**
+ * Unit tests for the RSVPService class.
+ */
 public class RSVPServiceUnitTest {
   @Mock
   private RSVPRepository rsvpRepository;
@@ -41,6 +43,9 @@ public class RSVPServiceUnitTest {
   private Event event;
   private RSVP rsvp;
 
+  /**
+   * Set up the test environment.
+   */
   @Before
   public void setUp() {
     MockitoAnnotations.openMocks(this);
@@ -60,6 +65,9 @@ public class RSVPServiceUnitTest {
     rsvp.setStatus("CONFIRMED");
   }
 
+  /**
+   * Test for creating an RSVP successfully.
+   */
   @Test
   public void testCreateRSVP_success() {
     when(userService.findUserById(1L)).thenReturn(user);

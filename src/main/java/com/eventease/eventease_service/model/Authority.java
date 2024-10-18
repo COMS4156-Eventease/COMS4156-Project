@@ -5,6 +5,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.io.Serializable;
 
+/**
+ * The Authority class is a model for the authorities of a user, e.g. if it
+ * has the permissions to create, organise and manage events.
+ */
 @Entity
 @Table(name = "authority")
 public class Authority implements Serializable {

@@ -25,19 +25,32 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controller class for handling HTTP requests related to events.
+ */
 @RestController
 @RequestMapping("/api/events")
 public class EventController {
   private EventService eventService;
   private UserService userService;
 
+  /**
+   * Constructor for the EventController class.
+   * @param eventService The service class for handling event-related operations.
+   * @param userService The service class for handling user-related operations.
+   */
   @Autowired
   public EventController(EventService eventService, UserService userService) {
     this.eventService = eventService;
     this.userService = userService;
   }
 
-  // Create a new event with details such as name, time, date, location, organizer, capacity, and budget.
+  /**
+   * Add a new event to the system.
+   * @param organizerId The ID of the user who is the organizer of the event.
+   * @param event The event object containing details of the event.
+   * @return
+   */
   @PostMapping
   public ResponseEntity<?> addEvent(
       @RequestParam Long organizerId,
@@ -65,7 +78,11 @@ public class EventController {
     }
   }
 
-  // Retrieve details of a specific event by its ID.
+  /**
+   * Retrieve details of a specific event by its ID.
+   * @param eventId The ID of the event to retrieve.
+   * @return The event details if found, or an error message if not found.
+   */
   @GetMapping(value = "/{eventId}")
   public ResponseEntity<?> getEventById(@PathVariable Long eventId) {
     try {
@@ -86,6 +103,13 @@ public class EventController {
   }
 
   // Retrieve a list of events with optional filters (e.g., date range)
+
+  /**
+   * Retrieve a list of events within a specified date range.
+   * @param startDate The start date of the date range.
+   * @param endDate The end date of the date range.
+   * @return A list of events within the specified date range.
+   */
   @GetMapping
   public ResponseEntity<List<Event>> getEvents(
       @RequestParam(value = "startDate")
@@ -97,7 +121,11 @@ public class EventController {
     return new ResponseEntity<>(events, HttpStatus.OK);
   }
 
-  // Delete a specific event.
+  /**
+   * Delete an event by its ID.
+   * @param eventId The ID of the event to delete.
+   * @return A response indicating the success or failure of the delete operation.
+   */
   @DeleteMapping(value = "/{eventId}")
   public ResponseEntity<?> deleteEventById(@PathVariable Long eventId) {
     try {
@@ -109,7 +137,12 @@ public class EventController {
     }
   }
 
-  // Update an existing event's details.
+  /**
+   * Update an existing event's details.
+   * @param eventId The ID of the event to update.
+   * @param updatedEvent The updated event object with new details.
+   * @return A response indicating the success or failure of the update operation.
+   */
   @PatchMapping("{eventId}")
   public ResponseEntity<String> updateEvent(
       @PathVariable Long eventId,

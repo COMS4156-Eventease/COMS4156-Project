@@ -63,6 +63,10 @@ public class Event implements Serializable {
 
   }
 
+  /**
+   * Constructor for the Event class from a Builder object.
+   * @param builder The Builder object to construct the Event from.
+   */
   public Event(Builder builder) {
     this.name = builder.name;
     this.description = builder.description;
@@ -164,6 +168,9 @@ public class Event implements Serializable {
     this.participants.remove(user);
   }
 
+  /**
+   * Builder class for the Event class.
+   */
   public static class Builder{
     @JsonProperty("id")
     private Long id;

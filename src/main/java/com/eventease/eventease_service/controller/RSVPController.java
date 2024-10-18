@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * The contrller class contains the RSVP management endpoints
+ * The contoller class contains the RSVP management endpoints
  */
 @RequestMapping("/api/events/{eventId}/")
 @RestController
