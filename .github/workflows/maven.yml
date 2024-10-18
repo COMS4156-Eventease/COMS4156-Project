@@ -18,23 +18,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # start mysql database
-    # reference: https://stackoverflow.com/a/75555069/6087491
     services:
       mysql:
         image: mysql:8.0
         env:
-          # The MySQL docker container requires these environment variables to be set
-          # so we can create and migrate the test database.
-          # See: https://hub.docker.com/_/mysql
-          MYSQL_DATABASE: root
+          MYSQL_DATABASE: test
           MYSQL_ROOT_PASSWORD: root
         ports:
-          # Opens port 3306 on service container and host
-          # https://docs.github.com/en/actions/using-containerized-services/about-service-containers
           - 3306:3306
-          # Before continuing, verify the mysql container is reachable from the ubuntu host
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: > 
+          --health-cmd="mysqladmin ping --silent" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5 
 
     steps:
       - uses: actions/checkout@v4
@@ -46,15 +42,21 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Install Ubuntu dependencies for MySQL
+      - name: Install dependencies for MySQL
         run: |
           sudo apt-get update
-          sudo apt-get install libcurl4-openssl-dev libmysqlclient-dev libgirepository1.0-dev
+          sudo apt-get install -y libmysqlclient-dev
 
-      - name: Set up MySQL
+      # Wait for MySQL to be ready before proceeding
+      - name: Wait for MySQL
         run: |
-          mysql --version
-          mysql --user=root --password=root --port=3306 --execute "CREATE DATABASE IF NOT EXISTS test;"
+          until mysqladmin ping --host=localhost --user=root --password=root --port=3306 --silent; do
+            echo "Waiting for MySQL to be available..."
+            sleep 5
+          done
+
+      - name: Create test database
+        run: mysql --host=localhost --user=root --password=root --port=3306 --execute "CREATE DATABASE IF NOT EXISTS test;"
 
       - name: Compile
         run: mvn compile
@@ -65,7 +67,6 @@ jobs:
       - name: Run Jacoco code coverage report
         run: mvn jacoco:report
 
-      # reference: https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
       - name: Upload Jacoco code coverage report
         uses: actions/upload-artifact@v4
         with:

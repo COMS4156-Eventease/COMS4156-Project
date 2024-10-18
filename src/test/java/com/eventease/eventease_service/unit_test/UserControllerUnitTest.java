@@ -22,7 +22,7 @@ public class UserControllerUnitTest {
 
     private MockMvc mockMvc;
 
-    @Mock
+
     private UserService userService;
 
     @InjectMocks
