@@ -8,8 +8,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.eventease.eventease_service.controller.EventController;
-import com.eventease.eventease_service.controller.RSVPController;
 import com.eventease.eventease_service.exception.EventNotExistException;
+import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.repository.EventRepository;
@@ -20,11 +20,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -66,7 +63,7 @@ public class EventControllerUnitTest {
 
   @Test
   public void addEventFailTest() throws Exception {
-    when(userService.findUserById(1L)).thenReturn(null);
+    when(userService.findUserById(1L)).thenThrow(new UserNotExistException("User is not found"));
 
     mockMvc.perform(post("/api/events?organizerId=1")
             .contentType(MediaType.APPLICATION_JSON)
