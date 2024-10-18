@@ -1,10 +1,9 @@
-package com.eventease.eventease_service.unit_test;
+package com.eventease.eventease_service.unit_test.conrtoller;
 
 import com.eventease.eventease_service.controller.TaskController;
 import com.eventease.eventease_service.exception.*;
 import com.eventease.eventease_service.model.Task;
 import com.eventease.eventease_service.model.User;
-import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.service.EventService;
 import com.eventease.eventease_service.service.TaskService;
 import com.eventease.eventease_service.service.UserService;
