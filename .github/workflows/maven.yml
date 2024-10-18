@@ -1,0 +1,71 @@
+# This workflow builds and runs on any commit and any pull request:
+# - All unit tests
+# - Jacoco code coverage report
+# - checkstyle
+
+# This file is built from the default GitHub Actions workflow for Maven
+# as a base, but modified to suit the needs of the project.
+
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # start mysql database
+    # reference: https://stackoverflow.com/a/75555069/6087491
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          # The MySQL docker container requires these environment variables to be set
+          # so we can create and migrate the test database.
+          # See: https://hub.docker.com/_/mysql
+          MYSQL_DATABASE: root
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          # Opens port 8080 on service container and host
+          # https://docs.github.com/en/actions/using-containerized-services/about-service-containers
+          - 808:8080
+          # Before continuing, verify the mysql container is reachable from the ubuntu host
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Install Ubuntu dependencies for MySQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install libcurl4-openssl-dev libmysqlclient-dev libgirepository1.0-dev
+
+      - name: Compile
+        run: mvn compile
+
+      - name: Run unit tests
+        run: mvn test
+
+      - name: Run Jacoco code coverage report
+        run: mvn jacoco:report
+
+      # reference: https://github.com/actions/upload-artifact?tab=readme-ov-file#usage
+      - name: Upload Jacoco code coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: ./IndividualProject/target/site/jacoco
+
+      - name: Run checkstyle
+        run: mvn checkstyle:check
