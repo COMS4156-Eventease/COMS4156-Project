@@ -45,9 +45,9 @@ public class EventController {
   ) {
     try {
       User organizer = userService.findUserById(organizerId);
-//      if (organizer == null) {
-//        return new ResponseEntity<>("Organizer not found", HttpStatus.NOT_FOUND);
-//      }
+      if (organizer == null) {
+        return new ResponseEntity<>("Organizer not found", HttpStatus.NOT_FOUND);
+      }
 
       event.setHost(organizer);
 
