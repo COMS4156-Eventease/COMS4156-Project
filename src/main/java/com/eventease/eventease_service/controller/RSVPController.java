@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * The contrller class contains the RSVP management endpoints
  */
-@RequestMapping("/events/{eventId}/")
+@RequestMapping("/api/events/{eventId}/")
 @RestController
 public class RSVPController {
   @Autowired
