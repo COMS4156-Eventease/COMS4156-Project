@@ -80,8 +80,18 @@ public class User implements Serializable {
   public User() {};
 
   public User(Builder builder) {
+    this.id = builder.id;
+    this.firstName = builder.firstName;
+    this.lastName = builder.lastName;
     this.username = builder.username;
     this.password = builder.password;
+    this.email = builder.email;
+    this.phoneNumber = builder.phoneNumber;
+    this.role = builder.role;
+    this.createdAt = builder.createdAt;
+    this.updatedAt = builder.updatedAt;
+    this.createdEvents = builder.createdEvents;
+    this.attendedEvents = builder.attendedEvents;
   }
 
   // helper
