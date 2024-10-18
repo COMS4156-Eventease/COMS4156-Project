@@ -70,24 +70,28 @@ public class TaskController {
             return new ResponseEntity<>("Error fetching task: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
+    
     @PatchMapping("/{taskId}/status")
     public ResponseEntity<?> updateTaskStatus(@PathVariable Long eventId,
                                               @PathVariable Long taskId,
-                                              @RequestBody Map<String, Task.TaskStatus> statusUpdate) {
+                                              @RequestBody Map<String, String> statusUpdate) {
         try {
-            Task.TaskStatus newStatus = statusUpdate.get("status");
+            String status = statusUpdate.get("statusUpdate");
+            Task.TaskStatus newStatus = Task.TaskStatus.valueOf(status);
             if (newStatus == null) {
                 return new ResponseEntity<>("Status is required", HttpStatus.BAD_REQUEST);
             }
             taskService.updateTaskStatus(eventId, taskId, newStatus);
             return new ResponseEntity<>("Task status updated successfully", HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>("Invalid status value", HttpStatus.BAD_REQUEST);
         } catch (TaskNotExistException | EventNotExistException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>("Error updating task status: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    
 
     @PatchMapping("/{taskId}/user")
     public ResponseEntity<?> updateTaskAssignedUser(@PathVariable Long eventId,
