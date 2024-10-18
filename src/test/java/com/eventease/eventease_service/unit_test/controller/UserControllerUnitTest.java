@@ -21,7 +21,9 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+/**
+ * Unit tests for the UserController class.
+ */
 public class UserControllerUnitTest {
 
     private MockMvc mockMvc;
@@ -33,12 +35,18 @@ public class UserControllerUnitTest {
     @InjectMocks
     private UserController userController;
 
+    /**
+     * Set up the test environment.
+     */
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
     }
 
+    /**
+     * Test for adding a new user successfully.
+     */
     @Test
     public void testAddNewUser() throws Exception {
         User user = new User();
@@ -57,6 +65,9 @@ public class UserControllerUnitTest {
         verify(userService, times(1)).addUser(any(User.class));
     }
 
+    /**
+     * Test for getting a user by ID successfully.
+     */
     @Test
     public void testGetUsersByFilter() throws Exception {
         when(userService.getUsersByFilter(anyString(), anyString(), anyString(), anyString(), any(User.Role.class)))
@@ -70,6 +81,9 @@ public class UserControllerUnitTest {
         verify(userService, times(1)).getUsersByFilter(eq("John"), eq("Doe"), isNull(), isNull(), isNull());
     }
 
+    /**
+     * Test for getting a user by ID successfully.
+     */
     @Test
     public void testUpdateUser() throws Exception {
         User user = new User();
@@ -87,6 +101,9 @@ public class UserControllerUnitTest {
         verify(userService, times(1)).updateUser(eq(1L), any(User.class));
     }
 
+    /**
+     * Test for deleting a user by ID successfully.
+     */
     @Test
     public void testDeleteUser() throws Exception {
         doNothing().when(userService).deleteUser(1L);

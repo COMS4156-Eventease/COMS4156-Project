@@ -6,6 +6,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.util.Objects;
 
+/**
+ * Represents a composite key for the RSVP class, which is a user's response to an event.
+ * This class stores information about the RSVP, including the user ID and event ID.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

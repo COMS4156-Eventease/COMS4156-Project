@@ -26,6 +26,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for the RSVPController class.
+ */
 @SpringBootTest
 public class RSVPControllerUnitTest {
   @InjectMocks
@@ -36,6 +39,9 @@ public class RSVPControllerUnitTest {
 
   private static RSVP rsvp;
 
+  /**
+   * Set up the test environment.
+   */
   @BeforeAll
   public static void setUp() {
     Event event = new Event();
@@ -47,6 +53,9 @@ public class RSVPControllerUnitTest {
     rsvp = new RSVP(user, event, "Going", LocalDateTime.now(), "Looking forward", false, "Guest");
   }
 
+  /**
+   * Test for creating an RSVP successfully.
+   */
   @Test
   public void createRSVPSuccess() {
     when(rsvpService.createRSVP(any(String.class), any(String.class), any(RSVP.class))).thenReturn(rsvp);
@@ -54,6 +63,9 @@ public class RSVPControllerUnitTest {
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
   }
 
+  /**
+   * Test for creating an RSVP when the event does not exist.
+   */
   @Test
   public void createRSVPEventFailure()  {
     when(rsvpService.createRSVP(any(String.class), any(String.class), any(RSVP.class))).thenThrow(new EventNotExistException("Event Not Found"));
@@ -62,6 +74,9 @@ public class RSVPControllerUnitTest {
     assertEquals("Event Not Found", response.getBody());
   }
 
+  /**
+   * Test for creating an RSVP when the user does not exist.
+   */
   @Test
   public void createRSVPUserFailure() {
     when(rsvpService.createRSVP(any(String.class), any(String.class), any(RSVP.class))).thenThrow(new UserNotExistException("User Not Found"));
@@ -70,6 +85,9 @@ public class RSVPControllerUnitTest {
     assertEquals("User Not Found", response.getBody());
   }
 
+  /**
+   * Test for getting attendees successfully.
+   */
   @Test
   public void getAttendeesSuccess() {
     List<RSVP> attendees = new ArrayList<>();
@@ -88,6 +106,9 @@ public class RSVPControllerUnitTest {
     assertEquals("Event Not Found", response.getBody());
   }
 
+  /**
+   * Test for cancelling an RSVP successfully.
+   */
   @Test
   public void cancelRSVPSuccess() {
     ResponseEntity<?> response = rsvpController.cancelRSVP("1", "1");
@@ -95,6 +116,9 @@ public class RSVPControllerUnitTest {
     assertEquals("RSVP successfully cancelled", response.getBody());
   }
 
+  /**
+   * Test for cancelling an RSVP when the user does not exist.
+   */
   @Test
   public void cancelRSVPUserFailure() {
     doThrow(new UserNotExistException("User Not Found")).when(rsvpService).cancelRSVP(any(String.class), any(String.class));
@@ -103,6 +127,9 @@ public class RSVPControllerUnitTest {
     assertEquals("User Not Found", response.getBody());
   }
 
+  /**
+   * Test for cancelling an RSVP when the event does not exist.
+   */
   @Test
   public void cancelRSVPEventFailure() {
     doThrow(new EventNotExistException("Event Not Found")).when(rsvpService).cancelRSVP(any(String.class), any(String.class));
@@ -111,6 +138,9 @@ public class RSVPControllerUnitTest {
     assertEquals("Event Not Found", response.getBody());
   }
 
+  /**
+   * Test for cancelling an RSVP when the RSVP does not exist.
+   */
   @Test
   public void cancelRSVPRSVPFailure() {
     doThrow(new RSVPNotExistException("RSVP Not Found")).when(rsvpService).cancelRSVP(any(String.class), any(String.class));
