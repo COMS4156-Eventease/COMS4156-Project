@@ -24,6 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class UserControllerUnitTest {
 
+    private MockMvc mockMvc;
+
+   
     @Mock
     private UserService userService;
 
