@@ -15,6 +15,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * TaskController is a REST controller that handles task-related operations for events.
+ * This controller supports creating, updating, retrieving,
+ * and deleting tasks associated with a specific event.
+ */
 @RestController
 @RequestMapping("/api/events/{eventId}/tasks")
 public class TaskController {
@@ -23,6 +28,13 @@ public class TaskController {
     private final UserService userService;
     private final EventService eventService;
 
+    /**
+     * Constructs a new TaskController with the appropriate provided task, user, and event services.
+     *
+     * @param taskService the service responsible for task management
+     * @param userService the service responsible for user management
+     * @param eventService the service responsible for event management
+     */
     @Autowired
     public TaskController(TaskService taskService, UserService userService, EventService eventService) {
         this.taskService = taskService;
@@ -30,6 +42,13 @@ public class TaskController {
         this.eventService = eventService;
     }
 
+    /**
+     * Creates a new task for a specific event with the given task parameters.
+     *
+     * @param eventId the ID of the event to which the task belongs
+     * @param task the task to be created
+     * @return a response entity containing the created task information or an error message
+     */
     @PostMapping
     public ResponseEntity<?> createTask(@PathVariable Long eventId,
                                         @Valid @RequestBody Task task) {
@@ -47,6 +66,12 @@ public class TaskController {
         }
     }
 
+    /**
+     * Retrieves a list of tasks for a specific event given the event ID.
+     *
+     * @param eventId the ID of the event
+     * @return a response entity containing the list of tasks or an error message
+     */
     @GetMapping
     public ResponseEntity<?> getTasksByEvent(@PathVariable Long eventId) {
         try {
@@ -59,6 +84,13 @@ public class TaskController {
         }
     }
 
+    /**
+     * Retrieves a specific task by its ID for a given event.
+     *
+     * @param eventId the ID of the event to which the task belongs
+     * @param taskId the ID of the task to be retrieved
+     * @return a response entity containing the task details or an error message
+     */
     @GetMapping("/{taskId}")
     public ResponseEntity<?> getTask(@PathVariable Long eventId, @PathVariable Long taskId) {
         try {
@@ -71,6 +103,14 @@ public class TaskController {
         }
     }
 
+    /**
+     * Updates the status of a specific task for a given event.
+     *
+     * @param eventId the ID of the event to which the task belongs
+     * @param taskId the ID of the task to be updated
+     * @param statusUpdate a map containing the new status of the task
+     * @return a response entity indicating success or failure
+     */
     @PatchMapping("/{taskId}/status")
     public ResponseEntity<?> updateTaskStatus(@PathVariable Long eventId,
                                               @PathVariable Long taskId,
@@ -89,6 +129,14 @@ public class TaskController {
         }
     }
 
+    /**
+     * Updates the assigned user of a specific task for a given event.
+     *
+     * @param eventId the ID of the event to which the task belongs
+     * @param taskId the ID of the task to be updated
+     * @param userId the ID of the new user to be assigned
+     * @return a response entity indicating success or failure
+     */
     @PatchMapping("/{taskId}/user")
     public ResponseEntity<?> updateTaskAssignedUser(@PathVariable Long eventId,
                                                     @PathVariable Long taskId,
@@ -109,6 +157,13 @@ public class TaskController {
         }
     }
 
+    /**
+     * Deletes a specific task by its task ID for a given event.
+     *
+     * @param eventId the ID of the event to which the task belongs
+     * @param taskId the ID of the task to be deleted
+     * @return a response entity indicating success or failure
+     */
     @DeleteMapping("/{taskId}")
     public ResponseEntity<?> deleteTask(@PathVariable Long eventId, @PathVariable Long taskId) {
         try {
