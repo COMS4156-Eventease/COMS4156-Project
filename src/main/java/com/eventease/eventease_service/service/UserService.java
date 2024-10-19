@@ -65,14 +65,14 @@ public class UserService {
     }
   // This method retrieves a user by its ID. If the user is not found, it throws an exception
   public User findUserById(long id) {
-    User user = userRepository.findById(id);
-    if (user == null) {
-      throw new UserNotExistException("User is not found.");
-    }
-    return user;
+      User user = userRepository.findById(id);  // This line should be updated to use Optional
+      if (user == null) {
+          throw new UserNotExistException("User is not found.");
+      }
+      return user;
   }
 
-  public void deleteUser(Long id) {
+    public void deleteUser(Long id) {
         userRepository.deleteById(id);
   }
 
