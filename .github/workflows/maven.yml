@@ -65,7 +65,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
-          path: ./IndividualProject/target/site/jacoco
+          path: ./target/site/jacoco
 
       - name: Run checkstyle
         run: mvn checkstyle:check
