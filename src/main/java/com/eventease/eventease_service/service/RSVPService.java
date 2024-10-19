@@ -16,9 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Service class for RSVPs, which represent a user's response to an event.
- */
 @Service
 public class RSVPService {
 
@@ -31,13 +28,6 @@ public class RSVPService {
   @Autowired
   EventService eventService;
 
-  /**
-   * Creates a new RSVP for a user to an event.
-   * @param eventId The ID of the event.
-   * @param userId The ID of the user.
-   * @param rsvp The RSVP to be created.
-   * @return The created RSVP.
-   */
   public RSVP createRSVP(String eventId, String userId, RSVP rsvp) {
     Event event = eventService.findById(Long.parseLong(eventId));
     User user = userService.findUserById(Long.parseLong(userId));
@@ -50,21 +40,13 @@ public class RSVPService {
     return rsvpRepository.save(rsvp);
   }
 
-  /**
-   * Gets all attendees for a given event.
-   * @param eventId The ID of the event.
-   * @return A list of RSVPs for the event.
-   */
+
   public List<RSVP> getAttendeesByEvent(String eventId) {
     Event event = eventService.findById(Long.parseLong(eventId));
     return rsvpRepository.findByEvent(event);
   }
 
-  /**
-   * Cancels an RSVP for a user to an event.
-   * @param eventId The ID of the event.
-   * @param userId The ID of the user.
-   */
+
   public void cancelRSVP(String eventId, String userId) {
     Event event = eventService.findById(Long.parseLong(eventId));
     User user = userService.findUserById(Long.parseLong(userId));

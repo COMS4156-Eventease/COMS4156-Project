@@ -9,11 +9,6 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/**
- * Represents an RSVP on the EventEase service, i.e. a user's response to an event.
- * This class stores information about the RSVP, including the user ID, event ID,
- * status, timestamp, notes, reminderSent, and eventRole.
- */
 @Entity
 @Getter
 @Setter

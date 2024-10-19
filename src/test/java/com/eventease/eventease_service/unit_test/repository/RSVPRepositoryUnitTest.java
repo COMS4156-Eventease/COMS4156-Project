@@ -20,9 +20,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for the RSVPRepository class.
- */
 @DataJpaTest
 //@ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -38,9 +35,6 @@ public class RSVPRepositoryUnitTest {
   @Autowired
   private UserRepository userRepository;
 
-  /**
-   * Set up the test environment.
-   */
   @BeforeEach
   public void setUp() {
     User user = new User.Builder()
@@ -68,9 +62,6 @@ public class RSVPRepositoryUnitTest {
     rsvpRepository.save(rsvp);
   }
 
-  /**
-   * Test for finding an RSVP by user and event successfully.
-   */
   @Test
   public void testFindByUserAndEventSuccess() {
     System.out.println(user.toString());
@@ -79,9 +70,6 @@ public class RSVPRepositoryUnitTest {
     assertTrue(foundRSVP.get().getStatus().equals("CONFIRMED"));
   }
 
-  /**
-   * Test for finding an RSVP by user and event when the RSVP does not exist.
-   */
   @Test
   public void testFindByUserAndEventFailure() {
     Event event2 = new Event();
@@ -90,18 +78,12 @@ public class RSVPRepositoryUnitTest {
     assertFalse(foundRSVP.isPresent());
   }
 
-  /**
-   * Test for finding an RSVP by user successfully.
-   */
   @Test
   public void testFindByEventSuccess() {
     List<RSVP> foundRSVP = rsvpRepository.findByEvent(event);
     assertTrue(foundRSVP.size() == 1);
   }
 
-  /**
-   * Test for finding an RSVP by user when the RSVP does not exist.
-   */
   @Test
   public void testFindByEventFailure() {
     Event event2 = new Event();

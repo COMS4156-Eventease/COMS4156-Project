@@ -10,9 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 
-/**
- * Service class for managing events in the system.
- */
 @Service
 public class EventService {
 
@@ -24,20 +21,12 @@ public class EventService {
     this.eventRepository = eventRepository;
   }
 
-  /**
-   * Saves a new event to the database.
-   * @param event The event to be saved.
-   */
+  // Saves a new event to the database
   public void add(Event event) {
     eventRepository.save(event);
   }
 
-  /**
-   * Finds an event by its ID.
-   * @param id The ID of the event to find.
-   * @return The event with the given ID.
-   * @throws EventNotExistException If the event does not exist.
-   */
+  // Finds an event by its ID and throws an exception if it doesn't exist
   public Event findById(long id) {
     Event event = eventRepository.findById(id);
     if (event == null) {
@@ -46,12 +35,6 @@ public class EventService {
     return event;
   }
 
-  /**
-   * Finds all events that fall within a given date range.
-   * @param startDate The start date of the range.
-   * @param endDate The end date of the range.
-   * @return A list of events that fall within the given date range.
-   */
   // @Transactional with readOnly = true marks this method as transactional, optimized for read operations
   @Transactional(readOnly = true)
   public List<Event> findByDateBetween(LocalDate startDate, LocalDate endDate) {
@@ -59,12 +42,7 @@ public class EventService {
     return events;
   }
 
-  /**
-   * Updates an existing event with new information, using the Builder pattern to ensure immutability.
-   * @param id The ID of the event to update.
-   * @param updatedEvent The updated event information.
-   * @throws EventNotExistException If the event does not exist.
-   */
+  // Updates an existing event using the Builder pattern to ensure immutability
   public void updateEvent(long id, Event updatedEvent) {
     Event existingEvent = eventRepository.findById(id);
     if (existingEvent == null) {
@@ -87,11 +65,6 @@ public class EventService {
     eventRepository.save(existingEvent);
   }
 
-  /**
-   * Deletes an event by its ID.
-   * @param id The ID of the event to delete.
-   * @throws EventNotExistException If the event does not exist.
-   */
   // @Transactional with Isolation.SERIALIZABLE ensures the highest level of isolation
   // to avoid concurrency issues during the delete operation
   @Transactional(isolation = Isolation.SERIALIZABLE)

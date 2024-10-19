@@ -68,10 +68,18 @@ Generate test coverage report:
 mvn jacoco:report
 ```
 
+Currently the branch coverage sits at 61%:
+![image](https://github.com/user-attachments/assets/02905c92-01c0-43b1-8c5b-a6424ca00a8b)
+
+
 Run code style checks:
 ```
 mvn checkstyle:check
 ```
+
+Currently there are no style reports:
+![image](https://github.com/user-attachments/assets/1a22e18a-5186-41fa-bd20-a812f0b7296c)
+
 
 
 # Automated CI/CD Pipeline

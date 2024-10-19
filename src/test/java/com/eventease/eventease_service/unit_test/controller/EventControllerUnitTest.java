@@ -26,9 +26,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-/**
- * Unit tests for the EventController class.
- */
 @WebMvcTest(EventController.class)
 public class EventControllerUnitTest {
 
@@ -45,9 +42,6 @@ public class EventControllerUnitTest {
   private UserService userService;
 
 
-  /**
-   * Test for adding an event successfully.
-   */
   @Test
   public void addEventSuccessTest() throws Exception {
     User organizer = new User(); // Create a dummy user
@@ -67,9 +61,6 @@ public class EventControllerUnitTest {
         .andExpect(jsonPath("$.organizerId").value(1));
   }
 
-  /**
-   * Test for failing to add an event (organizer not found).
-   */
   @Test
   public void addEventFailTest() throws Exception {
     when(userService.findUserById(1L)).thenThrow(new UserNotExistException("User is not found"));
@@ -81,9 +72,6 @@ public class EventControllerUnitTest {
         .andExpect(content().string("Organizer not found"));
   }
 
-  /**
-   * Test for getting an event by ID successfully.
-   */
   @Test
   public void getEventByIdSuccessTest() throws Exception {
     Event event = new Event();
@@ -98,9 +86,6 @@ public class EventControllerUnitTest {
         .andExpect(jsonPath("$.name").value("Event Title"));
   }
 
-  /**
-   * Test for failing to get an event by ID (event not found).
-   */
   @Test
   public void getEventByIdFailTest() throws Exception {
     when(eventService.findById(123L)).thenThrow(new EventNotExistException("Event not found"));
@@ -111,9 +96,6 @@ public class EventControllerUnitTest {
         .andExpect(content().string("Event not found"));
   }
 
-  /**
-   * Test for getting all events successfully.
-   */
   @Test
   public void getEventsSuccessTest() throws Exception {
     Event event1 = new Event();
@@ -136,9 +118,7 @@ public class EventControllerUnitTest {
         .andExpect(jsonPath("$[1].id").value(2));
   }
 
-  /**
-   * Test for failing to retrieve events within a date range
-   */
+  // Test for failing to retrieve events within a date range
   @Test
   public void getEventsFailTest() throws Exception {
     when(eventService.findByDateBetween(LocalDate.of(2024, 11, 1), LocalDate.of(2024, 11, 30))).thenReturn(
@@ -149,9 +129,6 @@ public class EventControllerUnitTest {
         .andExpect(jsonPath("$").isEmpty());
   }
 
-  /**
-   * Test for deleting an event successfully.
-   */
   @Test
   public void updateEventSuccessTest() throws Exception {
     Event existingEvent = new Event();
@@ -171,9 +148,7 @@ public class EventControllerUnitTest {
         .andExpect(content().string("Event updated successfully"));
   }
 
-  /**
-   * Test for failing to update an event (event not found)
-   */
+  // Test for failing to update an event (event not found)
   @Test
   public void updateEventFailTest() throws Exception {
     when(eventService.findById(123L)).thenThrow(new EventNotExistException("Event not found"));

@@ -21,12 +21,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.sql.Timestamp;
-/**
- * Represents a user on the EventEase service.
- * A user can be an elderly or other event attendee, an event organiser, or both.
- * This class stores information about the user, including the user's first name, last name,
- * username, password, email, phone number, role, created events, and attended events.
- */
+
 @Entity
 @Table(name = "user")
 @JsonDeserialize(builder = User.Builder.class)
@@ -85,10 +80,21 @@ public class User implements Serializable {
   public User() {};
 
   public User(Builder builder) {
+    this.id = builder.id;
+    this.firstName = builder.firstName;
+    this.lastName = builder.lastName;
     this.username = builder.username;
     this.password = builder.password;
+    this.email = builder.email;
+    this.phoneNumber = builder.phoneNumber;
+    this.role = builder.role;
+    this.createdAt = builder.createdAt;
+    this.updatedAt = builder.updatedAt;
+    this.createdEvents = builder.createdEvents;
+    this.attendedEvents = builder.attendedEvents;
   }
 
+  // helper
   public void addCreatedEvent(Event event) {
     event.setHost(this);
     createdEvents.add(event);
@@ -109,9 +115,6 @@ public class User implements Serializable {
     event.getParticipants().remove(this);  // Remove this user from the event's participants
   }
 
-  /**
-   * Builder class for constructing a User object.
-   */
   public static class Builder {
     @JsonProperty("id")
     private Long id;

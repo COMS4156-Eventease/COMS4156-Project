@@ -8,9 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-/**
- * Repository for the Event class, which represents an event in the system.
- */
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
   Event findById(long id);
