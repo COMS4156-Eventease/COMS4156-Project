@@ -19,6 +19,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+/**
+ * Unit tests for the UserController class.
+ */
 
 @SpringBootTest
 @ContextConfiguration
@@ -32,6 +35,9 @@ public class UserControllerUnitTest {
     private UserService userService;
 
 
+    /**
+     * Set up the test environment.
+     */
     @BeforeEach
     public void setup() {
     }
@@ -48,6 +54,9 @@ public class UserControllerUnitTest {
         return TestUserId.get();
     }
 
+    /**
+     * Test for adding a new user successfully.
+     */
     @Test
     @Order(1)
     public void testAddNewUser() throws Exception {
@@ -66,6 +75,9 @@ public class UserControllerUnitTest {
         this.getTestUserId();
     }
 
+    /**
+     * Test for getting a user by ID successfully.
+     */
     @Test
     @Order(2)
     public void testGetUsersByFilter() throws Exception {
@@ -76,6 +88,9 @@ public class UserControllerUnitTest {
 
     }
 
+    /**
+     * Test for getting a user by ID successfully.
+     */
     @Test
     @Order(3)
     public void testUpdateUser() throws Exception {
@@ -93,6 +108,9 @@ public class UserControllerUnitTest {
 
     }
 
+    /**
+     * Test for deleting a user by ID successfully.
+     */
     @Test
     @Order(4)
     public void testDeleteUser() throws Exception {
