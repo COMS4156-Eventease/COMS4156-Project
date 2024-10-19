@@ -22,7 +22,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class RSVPServiceTest {
+public class RSVPServiceUnitTest {
 
   @Mock
   private RSVPRepository rsvpRepository;
