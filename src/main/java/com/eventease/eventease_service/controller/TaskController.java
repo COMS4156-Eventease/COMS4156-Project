@@ -23,24 +23,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/events/{eventId}/tasks")
 public class TaskController {
-
-    private final TaskService taskService;
-    private final UserService userService;
-    private final EventService eventService;
-
-    /**
-     * Constructs a new TaskController with the appropriate provided task, user, and event services.
-     *
-     * @param taskService the service responsible for task management
-     * @param userService the service responsible for user management
-     * @param eventService the service responsible for event management
-     */
     @Autowired
-    public TaskController(TaskService taskService, UserService userService, EventService eventService) {
-        this.taskService = taskService;
-        this.userService = userService;
-        this.eventService = eventService;
-    }
+    private TaskService taskService;
+
+    @Autowired
+    private UserService userService;
 
     /**
      * Creates a new task for a specific event with the given task parameters.
