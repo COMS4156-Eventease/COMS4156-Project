@@ -80,6 +80,21 @@ public class UserControllerUnitTest {
      */
     @Test
     @Order(2)
+    public void testGetUserById() throws Exception {
+        int testUserId = this.getTestUserId(); // Assuming a user with this ID exists
+
+        mockMvc.perform(get("/api/users/" + testUserId))
+            .andExpect(status().isOk()) // Expecting HTTP 200 OK
+            .andExpect(jsonPath("$.firstName").value("John")) // Validate that the user's details match
+            .andExpect(jsonPath("$.lastName").value("Doe"))
+            .andExpect(jsonPath("$.email").value("john.doe@example.com"));
+    }
+
+    /**
+     * Test for getting a user by ID successfully.
+     */
+    @Test
+    @Order(2)
     public void testGetUsersByFilter() throws Exception {
         mockMvc.perform(get("/api/users/list")
                         .param("firstName", "John")
@@ -121,4 +136,15 @@ public class UserControllerUnitTest {
                 .andExpect(content().string("User deleted successfully"));  // Expecting success message
     }
 
+    /**
+     * Test for trying to get a non-existent user by ID.
+     */
+    @Test
+    @Order(5)
+    public void testGetUserById_NotFound() throws Exception {
+        int nonExistentUserId = 9999; // Assuming this ID does not exist
+
+        mockMvc.perform(get("/api/users/" + nonExistentUserId))
+            .andExpect(status().isNotFound()); // Expecting HTTP 404 Not Found
+    }
 }
