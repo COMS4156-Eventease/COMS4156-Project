@@ -44,7 +44,12 @@ public class TaskController {
             Map<String, Object> response = new HashMap<>();
             response.put("taskId", createdTask.getId());
             response.put("eventId", eventId);
-            response.put("userId", createdTask.getAssignedUser().getId());
+
+            if (createdTask.getAssignedUser() != null) {
+                response.put("userId", createdTask.getAssignedUser().getId());
+            } else {
+                response.put("userId", null); // Handle the case where no user is assigned
+            }
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (TaskNotExistException | EventNotExistException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);

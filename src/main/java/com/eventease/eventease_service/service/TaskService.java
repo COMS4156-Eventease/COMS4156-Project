@@ -35,11 +35,14 @@ public class TaskService {
      * @return the saved task
      */
     public Task createTask(Long eventId, Task task) {
-        Long userId = task.getId();
+        Long userId = task.getAssignedUser().getId();
         Event event = eventService.findById(eventId);
         User user = userService.findUserById(userId);
+
+
         task.setEvent(event);
         task.setAssignedUser(user);
+
         return taskRepository.save(task);
     }
 
