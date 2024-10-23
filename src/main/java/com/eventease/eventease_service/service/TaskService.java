@@ -34,9 +34,9 @@ public class TaskService {
      * @param task the task to be created
      * @return the saved task
      */
-    public Task createTask(Long eventId, Task task) {
+    public Task createTask(Long eventId, Task task, Long userId) {
         Event event = eventService.findById(eventId);
-        User user = userService.findUserById(task.getAssignedUser().getId());
+        User user = userService.findUserById(userId);
         task.setEvent(event);
         task.setAssignedUser(user);
         return taskRepository.save(task);
