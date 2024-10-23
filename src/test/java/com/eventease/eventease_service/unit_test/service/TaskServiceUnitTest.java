@@ -1,6 +1,7 @@
 package com.eventease.eventease_service.unit_test.service;
 
 import com.eventease.eventease_service.exception.TaskNotExistException;
+import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.Task;
 import com.eventease.eventease_service.model.User;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Arrays;
@@ -27,7 +29,6 @@ import static org.mockito.Mockito.*;
  * It uses Mockito to mock dependencies and tests various scenarios
  * to ensure the correct behavior of the TaskService methods.
  */
-@SpringBootTest
 public class TaskServiceUnitTest {
 
   @Mock
@@ -46,11 +47,9 @@ public class TaskServiceUnitTest {
   private User user;
   private Task task;
 
-  /**
-   * Sets up the test environment before each test method.
-   */
   @BeforeEach
   void setUp() {
+    MockitoAnnotations.openMocks(this);
     event = new Event();
     event.setId(1L);
 
@@ -63,25 +62,19 @@ public class TaskServiceUnitTest {
     task.setAssignedUser(user);
   }
 
-  /**
-   * Tests the createTask method of TaskService.
-   */
   @Test
   void testCreateTask() {
     when(eventService.findById(anyLong())).thenReturn(event);
     when(userService.findUserById(anyLong())).thenReturn(user);
     when(taskRepository.save(any(Task.class))).thenReturn(task);
 
-    Task result = taskService.createTask(1L, task);
+    Task result = taskService.createTask(1L, 1L, task); // Pass both eventId and userId
 
     assertNotNull(result);
     assertEquals(task, result);
     verify(taskRepository).save(task);
   }
 
-  /**
-   * Tests the getTasksByEvent method of TaskService.
-   */
   @Test
   void testGetTasksByEvent() {
     List<Task> tasks = Arrays.asList(task);
@@ -94,9 +87,6 @@ public class TaskServiceUnitTest {
     assertEquals(task, result.get(0));
   }
 
-  /**
-   * Tests the getTaskByEventAndId method of TaskService when the task exists.
-   */
   @Test
   void testGetTaskByEventAndId_TaskExists() {
     when(taskRepository.findByIdAndEventId(anyLong(), anyLong())).thenReturn(Optional.of(task));
@@ -107,61 +97,57 @@ public class TaskServiceUnitTest {
     assertEquals(task, result);
   }
 
-  /**
-   * Tests the getTaskByEventAndId method of TaskService when the task does not exist.
-   */
   @Test
   void testGetTaskByEventAndId_TaskNotExist() {
     when(taskRepository.findByIdAndEventId(anyLong(), anyLong())).thenReturn(Optional.empty());
 
-    assertThrows(TaskNotExistException.class, () -> taskService.getTaskByEventAndId(1L, 1L));
+    TaskNotExistException exception = assertThrows(TaskNotExistException.class,
+            () -> taskService.getTaskByEventAndId(1L, 1L));
+    assertEquals("Task not found with ID: 1 for event ID: 1", exception.getMessage());
   }
 
-  /**
-   * Tests the updateTaskStatus method of TaskService when the task exists.
-   */
   @Test
   void testUpdateTaskStatus_TaskExists() {
-    when(taskRepository.updateTaskStatus(anyLong(), anyLong(), any(Task.TaskStatus.class))).thenReturn(1);
+    when(taskRepository.findById(anyLong())).thenReturn(Optional.of(task));
 
     assertDoesNotThrow(() -> taskService.updateTaskStatus(1L, 1L, Task.TaskStatus.IN_PROGRESS));
+    verify(taskRepository).save(task); // Ensure the task is saved after updating the status
   }
 
-  /**
-   * Tests the updateTaskStatus method of TaskService when the task does not exist.
-   */
   @Test
   void testUpdateTaskStatus_TaskNotExist() {
-    when(taskRepository.updateTaskStatus(anyLong(), anyLong(), any(Task.TaskStatus.class))).thenReturn(0);
+    when(taskRepository.findById(anyLong())).thenReturn(Optional.empty());
 
     assertThrows(TaskNotExistException.class, () -> taskService.updateTaskStatus(1L, 1L, Task.TaskStatus.IN_PROGRESS));
   }
 
-  /**
-   * Tests the updateTaskAssignedUser method of TaskService when the task exists.
-   */
   @Test
   void testUpdateTaskAssignedUser_TaskExists() {
     when(userService.findUserById(anyLong())).thenReturn(user);
-    when(taskRepository.updateTaskAssignedUser(anyLong(), anyLong(), anyLong())).thenReturn(1);
+    when(taskRepository.updateTaskAssignedUser(anyLong(), anyLong(), any(User.class))).thenReturn(1);
 
     assertDoesNotThrow(() -> taskService.updateTaskAssignedUser(1L, 1L, 1L));
+    verify(taskRepository).updateTaskAssignedUser(1L, 1L, user);
   }
 
-  /**
-   * Tests the updateTaskAssignedUser method of TaskService when the task does not exist.
-   */
   @Test
   void testUpdateTaskAssignedUser_TaskNotExist() {
     when(userService.findUserById(anyLong())).thenReturn(user);
-    when(taskRepository.updateTaskAssignedUser(anyLong(), anyLong(), anyLong())).thenReturn(0);
+    when(taskRepository.updateTaskAssignedUser(anyLong(), anyLong(), any(User.class))).thenReturn(0);
 
-    assertThrows(TaskNotExistException.class, () -> taskService.updateTaskAssignedUser(1L, 1L, 1L));
+    assertThrows(TaskNotExistException.class,
+            () -> taskService.updateTaskAssignedUser(1L, 1L, 1L));
   }
 
-  /**
-   * Tests the deleteTask method of TaskService.
-   */
+  @Test
+  void testUpdateTaskAssignedUser_UserNotExist() {
+    when(userService.findUserById(anyLong())).thenThrow(new UserNotExistException("User not found"));
+
+    assertThrows(UserNotExistException.class,
+            () -> taskService.updateTaskAssignedUser(1L, 1L, 100L));
+    verify(taskRepository, never()).updateTaskAssignedUser(anyLong(), anyLong(), any(User.class));
+  }
+
   @Test
   void testDeleteTask() {
     doNothing().when(taskRepository).deleteByIdAndEventId(anyLong(), anyLong());
@@ -170,9 +156,6 @@ public class TaskServiceUnitTest {
     verify(taskRepository).deleteByIdAndEventId(1L, 1L);
   }
 
-  /**
-   * Tests the getTasksByUser method of TaskService.
-   */
   @Test
   void testGetTasksByUser() {
     List<Task> tasks = Arrays.asList(task);
@@ -185,9 +168,6 @@ public class TaskServiceUnitTest {
     assertEquals(task, result.get(0));
   }
 
-  /**
-   * Tests the findTaskById method of TaskService when the task exists.
-   */
   @Test
   void testFindTaskById_TaskExists() {
     when(taskRepository.findById(anyLong())).thenReturn(Optional.of(task));
@@ -198,9 +178,6 @@ public class TaskServiceUnitTest {
     assertEquals(task, result);
   }
 
-  /**
-   * Tests the findTaskById method of TaskService when the task does not exist.
-   */
   @Test
   void testFindTaskById_TaskNotExist() {
     when(taskRepository.findById(anyLong())).thenReturn(Optional.empty());

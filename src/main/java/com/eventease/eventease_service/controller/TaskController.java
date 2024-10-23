@@ -2,7 +2,6 @@ package com.eventease.eventease_service.controller;
 
 import com.eventease.eventease_service.exception.*;
 import com.eventease.eventease_service.model.Task;
-import com.eventease.eventease_service.service.EventService;
 import com.eventease.eventease_service.service.TaskService;
 import com.eventease.eventease_service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,24 +22,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/events/{eventId}/tasks")
 public class TaskController {
-
-    private final TaskService taskService;
-    private final UserService userService;
-    private final EventService eventService;
-
-    /**
-     * Constructs a new TaskController with the appropriate provided task, user, and event services.
-     *
-     * @param taskService the service responsible for task management
-     * @param userService the service responsible for user management
-     * @param eventService the service responsible for event management
-     */
     @Autowired
-    public TaskController(TaskService taskService, UserService userService, EventService eventService) {
-        this.taskService = taskService;
-        this.userService = userService;
-        this.eventService = eventService;
-    }
+    private TaskService taskService;
+
+    @Autowired
+    private UserService userService;
 
     /**
      * Creates a new task for a specific event with the given task parameters.
@@ -51,13 +37,15 @@ public class TaskController {
      */
     @PostMapping
     public ResponseEntity<?> createTask(@PathVariable Long eventId,
+                                        @RequestParam Long userId,
                                         @Valid @RequestBody Task task) {
         try {
-            Task createdTask = taskService.createTask(eventId, task);
+            Task createdTask = taskService.createTask(eventId, userId, task);
             Map<String, Object> response = new HashMap<>();
             response.put("taskId", createdTask.getId());
             response.put("eventId", eventId);
             response.put("userId", createdTask.getAssignedUser().getId());
+            response.put("message","Task added successfully");
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (TaskNotExistException | EventNotExistException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -116,7 +104,8 @@ public class TaskController {
                                               @PathVariable Long taskId,
                                               @RequestBody Map<String, Task.TaskStatus> statusUpdate) {
         try {
-            Task.TaskStatus newStatus = statusUpdate.get("status");
+            Task.TaskStatus newStatus = statusUpdate.get("statusUpdate");
+
             if (newStatus == null) {
                 return new ResponseEntity<>("Status is required", HttpStatus.BAD_REQUEST);
             }

@@ -54,15 +54,16 @@ class TaskControllerUnitTest {
     @Test
     void createTask_Success() throws Exception {
         Long eventId = 1L;
+        Long userId = 1L;
         Task task = new Task();
         task.setId(1L);
         User user = new User();
         user.setId(1L);
         task.setAssignedUser(user);
 
-        when(taskService.createTask(eq(eventId), any(Task.class))).thenReturn(task);
+        when(taskService.createTask(eq(eventId), eq(userId), any(Task.class))).thenReturn(task);
 
-        ResponseEntity<?> response = taskController.createTask(eventId, task);
+        ResponseEntity<?> response = taskController.createTask(eventId, userId, task);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertTrue(response.getBody() instanceof Map);
@@ -80,11 +81,12 @@ class TaskControllerUnitTest {
     @Test
     void createTask_EventNotFound() throws Exception {
         Long eventId = 1L;
+        Long userId = 1L;
         Task task = new Task();
 
-        when(taskService.createTask(eq(eventId), any(Task.class))).thenThrow(new EventNotExistException("Event not found"));
+        when(taskService.createTask(eq(eventId), eq(userId), any(Task.class))).thenThrow(new EventNotExistException("Event not found"));
 
-        ResponseEntity<?> response = taskController.createTask(eventId, task);
+        ResponseEntity<?> response = taskController.createTask(eventId, userId, task);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("Event not found", response.getBody());
@@ -172,7 +174,7 @@ class TaskControllerUnitTest {
         Long eventId = 1L;
         Long taskId = 1L;
         Map<String, Task.TaskStatus> statusUpdate = new HashMap<>();
-        statusUpdate.put("status", Task.TaskStatus.COMPLETED);
+        statusUpdate.put("statusUpdate", Task.TaskStatus.COMPLETED);
 
         doNothing().when(taskService).updateTaskStatus(eventId, taskId, Task.TaskStatus.COMPLETED);
 
@@ -226,15 +228,13 @@ class TaskControllerUnitTest {
     void updateTaskAssignedUser_UserNotFound() {
         Long eventId = 1L;
         Long taskId = 1L;
-        String newUserId = "2";
+        String newUserId = "100";
 
-        when(userService.findUserById(2L)).thenReturn(new User());
-        doNothing().when(taskService).updateTaskAssignedUser(eventId, taskId, 2L);
-
+        doThrow(new UserNotExistException("User not found")).when(userService).findUserById(100L);
         ResponseEntity<?> response = taskController.updateTaskAssignedUser(eventId, taskId, newUserId);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Task assigned user updated successfully", response.getBody());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("User not found with ID: " + newUserId, response.getBody());
     }
 
     /**
