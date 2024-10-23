@@ -85,7 +85,7 @@ public class TaskService {
      *
      * @param eventId the ID of the event to which the task belongs
      * @param taskId the ID of the task to update
-     * @param status the new status of the task
+     * @param newStatus the new status of the task
      * @throws TaskNotExistException if the task is not found
      */
 
@@ -106,7 +106,7 @@ public class TaskService {
     }
 
 
-/**
+    /**
      * Updates the user assigned to a specific task.
      *
      * @param eventId the ID of the event to which the task belongs

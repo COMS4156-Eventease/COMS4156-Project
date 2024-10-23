@@ -2,7 +2,6 @@ package com.eventease.eventease_service.controller;
 
 import com.eventease.eventease_service.exception.*;
 import com.eventease.eventease_service.model.Task;
-import com.eventease.eventease_service.service.EventService;
 import com.eventease.eventease_service.service.TaskService;
 import com.eventease.eventease_service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,7 +107,7 @@ public class TaskController {
             Task.TaskStatus newStatus = statusUpdate.get("statusUpdate");
 
             if (newStatus == null) {
-                return new ResponseEntity<>(statusUpdate, HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>("Status is required", HttpStatus.BAD_REQUEST);
             }
             taskService.updateTaskStatus(eventId, taskId, newStatus);
             return new ResponseEntity<>("Task status updated successfully", HttpStatus.OK);
