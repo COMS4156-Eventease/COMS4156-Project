@@ -38,18 +38,15 @@ public class TaskController {
      */
     @PostMapping
     public ResponseEntity<?> createTask(@PathVariable Long eventId,
+                                        @RequestParam Long userId,
                                         @Valid @RequestBody Task task) {
         try {
-            Task createdTask = taskService.createTask(eventId, task);
+            Task createdTask = taskService.createTask(eventId, userId, task);
             Map<String, Object> response = new HashMap<>();
             response.put("taskId", createdTask.getId());
             response.put("eventId", eventId);
-
-            if (createdTask.getAssignedUser() != null) {
-                response.put("userId", createdTask.getAssignedUser().getId());
-            } else {
-                response.put("userId", null); // Handle the case where no user is assigned
-            }
+            response.put("userId", createdTask.getAssignedUser().getId());
+            response.put("message","Task added successfully");
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (TaskNotExistException | EventNotExistException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -108,9 +105,10 @@ public class TaskController {
                                               @PathVariable Long taskId,
                                               @RequestBody Map<String, Task.TaskStatus> statusUpdate) {
         try {
-            Task.TaskStatus newStatus = statusUpdate.get("status");
+            Task.TaskStatus newStatus = statusUpdate.get("statusUpdate");
+
             if (newStatus == null) {
-                return new ResponseEntity<>("Status is required", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(statusUpdate, HttpStatus.BAD_REQUEST);
             }
             taskService.updateTaskStatus(eventId, taskId, newStatus);
             return new ResponseEntity<>("Task status updated successfully", HttpStatus.OK);
