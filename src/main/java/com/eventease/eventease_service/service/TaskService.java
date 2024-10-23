@@ -114,13 +114,21 @@ public class TaskService {
      * @param userId the ID of the new assigned user
      * @throws TaskNotExistException if the task is not found
      */
-    public void updateTaskAssignedUser(Long eventId, Long taskId, Long userId) {
-        userService.findUserById(userId); // Verify user exists
-        int updatedRows = taskRepository.updateTaskAssignedUser(taskId, eventId, userId);
-        if (updatedRows == 0) {
-            throw new TaskNotExistException("Task not found with ID: " + taskId + " for event ID: " + eventId);
+    @Transactional
+    public void updateTaskAssignedUser(Long eventId, Long taskId, Long userId) throws TaskNotExistException, EventNotExistException, UserNotExistException {
+        // Fetch the user entity
+        User user = userService.findUserById(userId);
+        if (user == null) {
+            throw new UserNotExistException("User not found");
+        }
+
+        // Update the task's assigned user
+        int rowsUpdated = taskRepository.updateTaskAssignedUser(taskId, eventId, user);
+        if (rowsUpdated == 0) {
+            throw new TaskNotExistException("Task or Event not found");
         }
     }
+
 
     /**
      * Deletes a specific task by its ID and associated event ID.
