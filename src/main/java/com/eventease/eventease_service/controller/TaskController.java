@@ -34,16 +34,13 @@ public class TaskController {
      *
      * @param eventId the ID of the event to which the task belongs
      * @param task the task to be created
-     * @param userId the ID of the user to assign the task to
      * @return a response entity containing the created task information or an error message
      */
     @PostMapping
     public ResponseEntity<?> createTask(@PathVariable Long eventId,
-                                        @RequestParam Long userId,
-                                        @Valid @RequestBody Task task
-                                        ) {
+                                        @Valid @RequestBody Task task) {
         try {
-            Task createdTask = taskService.createTask(eventId, task, userId);
+            Task createdTask = taskService.createTask(eventId, task);
             Map<String, Object> response = new HashMap<>();
             response.put("taskId", createdTask.getId());
             response.put("eventId", eventId);

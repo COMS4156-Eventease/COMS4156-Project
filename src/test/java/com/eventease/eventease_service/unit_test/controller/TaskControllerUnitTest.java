@@ -54,6 +54,7 @@ class TaskControllerUnitTest {
     @Test
     void createTask_Success() throws Exception {
         Long eventId = 1L;
+        Long userId = 1L;
         Task task = new Task();
         task.setId(1L);
         User user = new User();
