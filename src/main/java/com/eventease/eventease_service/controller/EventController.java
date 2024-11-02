@@ -1,6 +1,7 @@
 package com.eventease.eventease_service.controller;
 
 import com.eventease.eventease_service.exception.EventNotExistException;
+import com.eventease.eventease_service.exception.GCSUploadException;
 import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.User;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/events")
@@ -40,18 +42,32 @@ public class EventController {
   // Create a new event with details such as name, time, date, location, organizer, capacity, and budget.
   @PostMapping
   public ResponseEntity<?> addEvent(
-      @RequestParam Long organizerId,
-      @RequestBody Event event
+      @RequestParam("organizerId") Long organizerId,
+      @RequestParam("name") String name,
+      @RequestParam("time") String time,
+      @RequestParam("date") String date,
+      @RequestParam("location") String location,
+      @RequestParam("description") String description,
+      @RequestParam("capacity") String capacity,
+      @RequestParam("budget") String budget,
+      @RequestParam("images") MultipartFile[] images
   ) {
     try {
       User organizer = userService.findUserById(organizerId);
       if (organizer == null) {
         return new ResponseEntity<>("Organizer not found", HttpStatus.NOT_FOUND);
       }
+      Event event = new Event.Builder().setName(name)
+          .setTime(LocalTime.parse(time))
+          .setDate(LocalDate.parse(date))
+          .setLocation(location)
+          .setDescription(description)
+          .setCapacity(Integer.parseInt(capacity))
+          .setBudget(Integer.parseInt(budget))
+          .setHost(organizer)
+          .build();
 
-      event.setHost(organizer);
-
-      eventService.add(event);
+      eventService.add(event, images);
 
       Map<String, Object> response = new HashMap<>();
       response.put("organizerId", organizer.getId());
@@ -60,6 +76,8 @@ public class EventController {
       return new ResponseEntity<>(response, HttpStatus.CREATED);
     } catch (UserNotExistException e) {
       return new ResponseEntity<>("Organizer not found", HttpStatus.NOT_FOUND);
+    } catch (GCSUploadException e) {
+      return new ResponseEntity<>("GCP error", HttpStatus.INTERNAL_SERVER_ERROR);
     } catch (Exception e) {
       return new ResponseEntity<>("Error creating event: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -109,24 +127,43 @@ public class EventController {
     }
   }
 
-  // Update an existing event's details.
   @PatchMapping("{eventId}")
   public ResponseEntity<String> updateEvent(
       @PathVariable Long eventId,
-      @RequestBody Event updatedEvent) {
-
+      @RequestParam(value = "name", required = false) String name,
+      @RequestParam(value = "time", required = false) String time,
+      @RequestParam(value = "date", required = false) String date,
+      @RequestParam(value = "location", required = false) String location,
+      @RequestParam(value = "description", required = false) String description,
+      @RequestParam(value = "capacity", required = false) String capacity,
+      @RequestParam(value = "budget", required = false) String budget,
+      @RequestParam(value = "images", required = false) MultipartFile[] images
+  ) {
     try {
+      // Fetch the existing event
       Event existingEvent = eventService.findById(eventId);
-//      if (existingEvent == null) {
-//        return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
-//      }
 
-      eventService.updateEvent(eventId, updatedEvent);
+      // Create a new Event object to hold updates
+      Event updatedEvent = new Event.Builder()
+          .setName(name != null ? name : existingEvent.getName())
+          .setTime(time != null ? LocalTime.parse(time) : existingEvent.getTime())
+          .setDate(date != null ? LocalDate.parse(date) : existingEvent.getDate())
+          .setLocation(location != null ? location : existingEvent.getLocation())
+          .setDescription(description != null ? description : existingEvent.getDescription())
+          .setCapacity(capacity != null ? Integer.parseInt(capacity) : existingEvent.getCapacity())
+          .setBudget(budget != null ? Integer.parseInt(budget) : existingEvent.getBudget())
+          .setHost(existingEvent.getHost()) // Retain original host
+          .setParticipants(existingEvent.getParticipants()) // Retain original participants
+          .build();
+
+      // Pass updatedEvent and images to the eventService for saving
+      eventService.updateEvent(eventId, updatedEvent, images);
+
       return new ResponseEntity<>("Event updated successfully", HttpStatus.OK);
     } catch (EventNotExistException e) {
       return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
     } catch (Exception e) {
-      return new ResponseEntity<>("Failed to update event", HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<>("Failed to update event: " + e.getMessage(), HttpStatus.BAD_REQUEST);
     }
   }
 
