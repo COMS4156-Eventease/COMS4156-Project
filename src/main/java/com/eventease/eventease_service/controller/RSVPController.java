@@ -152,4 +152,43 @@ public class RSVPController {
     }
   }
 
+  /**
+   * Endpoint for updating an RSVP for a user to an event.
+   * This method handles PATCH requests to partially update an RSVP.
+   *
+   * @param eventId                 the ID of the event
+   * @param userId                  the ID of the user making the RSVP
+   * @param rsvpUpdates             the RSVP fields to update
+   *
+   * @return                        a ResponseEntity with the updated RSVP or an error message if the RSVP does not exist
+   */
+  @RequestMapping(value = "/rsvp/{userId}", method = RequestMethod.PATCH)
+  public ResponseEntity<?> updateRSVP(@PathVariable String eventId, @PathVariable String userId, @RequestBody Map<String, Object> rsvpUpdates) {
+    Map<String, Object> response = new HashMap<>();
+    try {
+      RSVP updatedRSVP = rsvpService.updateRSVP(eventId, userId, rsvpUpdates);
+
+      List<RSVP> dataList = new ArrayList<>();
+      dataList.add(updatedRSVP);
+      response.put("success", true);
+      response.put("data", dataList);
+
+      return new ResponseEntity<>(response, HttpStatus.OK);
+
+    } catch (EventNotExistException | UserNotExistException | RSVPNotExistException error) {
+      response.put("success", false);
+      response.put("data", new ArrayList<>());
+      response.put("message", error.getMessage());
+
+      return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+
+    } catch (Exception e) {
+      response.put("success", false);
+      response.put("data", new ArrayList<>());
+      response.put("message", e.getMessage());
+
+      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
 }
