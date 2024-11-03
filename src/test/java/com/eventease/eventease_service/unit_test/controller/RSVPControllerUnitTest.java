@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -85,14 +86,16 @@ public class RSVPControllerUnitTest {
     when(rsvpService.getAttendeesByEvent(any(String.class))).thenThrow(new EventNotExistException("Event Not Found"));
     ResponseEntity<?> response = rsvpController.getAttendee("1");
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    assertEquals("Event Not Found", response.getBody());
+    Map<String, Object> body = (Map<String, Object>) response.getBody();
+    assertEquals("Event Not Found", body.get("message"));
   }
 
   @Test
   public void cancelRSVPSuccess() {
     ResponseEntity<?> response = rsvpController.cancelRSVP("1", "1");
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals("RSVP successfully cancelled", response.getBody());
+    Map<String, Object> body = (Map<String, Object>) response.getBody();
+    assertEquals("RSVP successfully cancelled", body.get("message"));
   }
 
   @Test
@@ -100,7 +103,8 @@ public class RSVPControllerUnitTest {
     doThrow(new UserNotExistException("User Not Found")).when(rsvpService).cancelRSVP(any(String.class), any(String.class));
     ResponseEntity<?> response = rsvpController.cancelRSVP("1", "1");
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    assertEquals("User Not Found", response.getBody());
+    Map<String, Object> body = (Map<String, Object>) response.getBody();
+    assertEquals("User Not Found", body.get("message"));
   }
 
   @Test
@@ -108,7 +112,8 @@ public class RSVPControllerUnitTest {
     doThrow(new EventNotExistException("Event Not Found")).when(rsvpService).cancelRSVP(any(String.class), any(String.class));
     ResponseEntity<?> response = rsvpController.cancelRSVP("1", "1");
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    assertEquals("Event Not Found", response.getBody());
+    Map<String, Object> body = (Map<String, Object>) response.getBody();
+    assertEquals("Event Not Found", body.get("message"));
   }
 
   @Test
@@ -116,6 +121,7 @@ public class RSVPControllerUnitTest {
     doThrow(new RSVPNotExistException("RSVP Not Found")).when(rsvpService).cancelRSVP(any(String.class), any(String.class));
     ResponseEntity<?> response = rsvpController.cancelRSVP("1", "1");
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    assertEquals("RSVP Not Found", response.getBody());
+    Map<String, Object> body = (Map<String, Object>) response.getBody();
+    assertEquals("RSVP Not Found", body.get("message"));
   }
 }

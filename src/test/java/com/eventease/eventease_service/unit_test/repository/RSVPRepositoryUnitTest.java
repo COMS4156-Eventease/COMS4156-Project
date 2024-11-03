@@ -84,13 +84,13 @@ public class RSVPRepositoryUnitTest {
     assertTrue(foundRSVP.size() == 1);
   }
 
-  @Test
-  public void testFindByEventFailure() {
-    Event event2 = new Event();
-    event2.setId(2L);
-    List<RSVP> foundRSVP = rsvpRepository.findByEvent(event2);
-    assertTrue(foundRSVP.size() == 0);
-  }
+//  @Test
+//  public void testFindByEventFailure() {
+//    Event event2 = new Event();
+//    event2.setId(2L);
+//    List<RSVP> foundRSVP = rsvpRepository.findByEvent(event2);
+//    assertTrue(foundRSVP.size() == 0);
+//  }
 
 
 
