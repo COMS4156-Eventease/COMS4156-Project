@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +22,7 @@ import java.util.Map;
  * and deleting tasks associated with a specific event.
  */
 @RestController
-@RequestMapping("/api/events/{eventId}/tasks")
+@RequestMapping("/api/tasks")
 public class TaskController {
     @Autowired
     private TaskService taskService;
@@ -28,140 +30,152 @@ public class TaskController {
     @Autowired
     private UserService userService;
 
-    /**
-     * Creates a new task for a specific event with the given task parameters.
-     *
-     * @param eventId the ID of the event to which the task belongs
-     * @param task the task to be created
-     * @return a response entity containing the created task information or an error message
-     */
     @PostMapping
-    public ResponseEntity<?> createTask(@PathVariable Long eventId,
-                                        @RequestParam Long userId,
-                                        @Valid @RequestBody Task task) {
+    public ResponseEntity<Map<String, Object>> createTask(@RequestParam Long eventId,
+                                                          @RequestParam Long userId,
+                                                          @Valid @RequestBody Map<String, Object> request) {
+        Map<String, Object> response = new HashMap<>();
         try {
+            Task task = (Task) request.get("task");
             Task createdTask = taskService.createTask(eventId, userId, task);
-            Map<String, Object> response = new HashMap<>();
-            response.put("taskId", createdTask.getId());
-            response.put("eventId", eventId);
-            response.put("userId", createdTask.getAssignedUser().getId());
-            response.put("message","Task added successfully");
+            response.put("success", true);
+            response.put("data", Collections.singletonList(createdTask));
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (TaskNotExistException | EventNotExistException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            response.put("success", false);
+            response.put("data", Collections.emptyList());
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error creating task: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("success", false);
+            response.put("data", Collections.emptyList());
+            response.put("message", "Error creating task: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    /**
-     * Retrieves a list of tasks for a specific event given the event ID.
-     *
-     * @param eventId the ID of the event
-     * @return a response entity containing the list of tasks or an error message
-     */
-    @GetMapping
-    public ResponseEntity<?> getTasksByEvent(@PathVariable Long eventId) {
+    @GetMapping("/event/{eventId}")
+    public ResponseEntity<Map<String, Object>> getTasksByEvent(@PathVariable Long eventId) {
+        Map<String, Object> response = new HashMap<>();
         try {
             List<Task> tasks = taskService.getTasksByEvent(eventId);
-            return new ResponseEntity<>(tasks, HttpStatus.OK);
+            response.put("success", true);
+            response.put("data", tasks);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (TaskNotExistException | EventNotExistException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            response.put("success", false);
+            response.put("data", Collections.emptyList());
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error fetching tasks: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("success", false);
+            response.put("data", Collections.emptyList());
+            response.put("message", "Error fetching tasks: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    /**
-     * Retrieves a specific task by its ID for a given event.
-     *
-     * @param eventId the ID of the event to which the task belongs
-     * @param taskId the ID of the task to be retrieved
-     * @return a response entity containing the task details or an error message
-     */
     @GetMapping("/{taskId}")
-    public ResponseEntity<?> getTask(@PathVariable Long eventId, @PathVariable Long taskId) {
+    public ResponseEntity<Map<String, Object>> getTask(@PathVariable Long taskId) {
+        Map<String, Object> response = new HashMap<>();
         try {
-            Task task = taskService.getTaskByEventAndId(eventId, taskId);
-            return new ResponseEntity<>(task, HttpStatus.OK);
-        } catch (TaskNotExistException | EventNotExistException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            Task task = taskService.getTaskById(taskId);  // Modify service method to get by taskId only
+            response.put("success", true);
+            response.put("data", Collections.singletonList(task));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (TaskNotExistException e) {
+            response.put("success", false);
+            response.put("data", Collections.emptyList());
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error fetching task: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("success", false);
+            response.put("data", Collections.emptyList());
+            response.put("message", "Error fetching task: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    /**
-     * Updates the status of a specific task for a given event.
-     *
-     * @param eventId the ID of the event to which the task belongs
-     * @param taskId the ID of the task to be updated
-     * @param statusUpdate a map containing the new status of the task
-     * @return a response entity indicating success or failure
-     */
     @PatchMapping("/{taskId}/status")
-    public ResponseEntity<?> updateTaskStatus(@PathVariable Long eventId,
-                                              @PathVariable Long taskId,
-                                              @RequestBody Map<String, Task.TaskStatus> statusUpdate) {
+    public ResponseEntity<Map<String, Object>> updateTaskStatus(
+            @PathVariable Long taskId,
+            @RequestBody Map<String, Object> request) {
+        Map<String, Object> response = new HashMap<>();
         try {
-            Task.TaskStatus newStatus = statusUpdate.get("statusUpdate");
-
+            Task.TaskStatus newStatus = Task.TaskStatus.valueOf(request.get("status").toString());
             if (newStatus == null) {
-                return new ResponseEntity<>("Status is required", HttpStatus.BAD_REQUEST);
+                response.put("success", false);
+                response.put("data", Collections.emptyList());
+                response.put("message", "Status is required");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
             }
-            taskService.updateTaskStatus(eventId, taskId, newStatus);
-            return new ResponseEntity<>("Task status updated successfully", HttpStatus.OK);
-        } catch (TaskNotExistException | EventNotExistException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            taskService.updateTaskStatus(taskId, newStatus);  // Modify service method
+            response.put("success", true);
+            response.put("data", Collections.singletonList("Task status updated successfully"));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (TaskNotExistException e) {
+            response.put("success", false);
+            response.put("data", Collections.emptyList());
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error updating task status: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("success", false);
+            response.put("data", Collections.emptyList());
+            response.put("message", "Error updating task status: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    /**
-     * Updates the assigned user of a specific task for a given event.
-     *
-     * @param eventId the ID of the event to which the task belongs
-     * @param taskId the ID of the task to be updated
-     * @param userId the ID of the new user to be assigned
-     * @return a response entity indicating success or failure
-     */
     @PatchMapping("/{taskId}/user")
-    public ResponseEntity<?> updateTaskAssignedUser(@PathVariable Long eventId,
-                                                    @PathVariable Long taskId,
-                                                    @RequestBody String userId) {
+    public ResponseEntity<Map<String, Object>> updateTaskAssignedUser(
+            @PathVariable Long taskId,
+            @RequestBody Map<String, Object> request) {
+        Map<String, Object> response = new HashMap<>();
         try {
-            Long newUserId = Long.parseLong(userId);
+            Long newUserId = Long.parseLong(request.get("userId").toString());
             try {
                 userService.findUserById(newUserId);
             } catch (UserNotExistException e) {
-                return new ResponseEntity<>("User not found with ID: " + userId, HttpStatus.NOT_FOUND);
+                response.put("success", false);
+                response.put("data", Collections.emptyList());
+                response.put("message", "User not found with ID: " + newUserId);
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
             }
-            taskService.updateTaskAssignedUser(eventId, taskId, newUserId);
-            return new ResponseEntity<>("Task assigned user updated successfully", HttpStatus.OK);
-        } catch (TaskNotExistException | EventNotExistException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            taskService.updateTaskAssignedUser(taskId, newUserId);  // Modify service method
+            response.put("success", true);
+            response.put("data", Collections.singletonList("Task assigned user updated successfully"));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (TaskNotExistException e) {
+            response.put("success", false);
+            response.put("data", Collections.emptyList());
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error deleting task: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("success", false);
+            response.put("data", Collections.emptyList());
+            response.put("message", "Error updating assigned user: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    /**
-     * Deletes a specific task by its task ID for a given event.
-     *
-     * @param eventId the ID of the event to which the task belongs
-     * @param taskId the ID of the task to be deleted
-     * @return a response entity indicating success or failure
-     */
     @DeleteMapping("/{taskId}")
-    public ResponseEntity<?> deleteTask(@PathVariable Long eventId, @PathVariable Long taskId) {
+    public ResponseEntity<Map<String, Object>> deleteTask(@PathVariable Long taskId) {
+        Map<String, Object> response = new HashMap<>();
         try {
-            taskService.deleteTask(eventId, taskId);
-            return new ResponseEntity<>("Task deleted successfully", HttpStatus.OK);
-        } catch (TaskNotExistException | EventNotExistException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            taskService.deleteTask(taskId);  // Modify service method
+            response.put("success", true);
+            response.put("data", Collections.singletonList("Task deleted successfully"));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (TaskNotExistException e) {
+            response.put("success", false);
+            response.put("data", Collections.emptyList());
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error deleting task: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("success", false);
+            response.put("data", Collections.emptyList());
+            response.put("message", "Error deleting task: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -56,21 +56,17 @@ class TaskControllerUnitTest {
         Long eventId = 1L;
         Long userId = 1L;
         Task task = new Task();
-        task.setId(1L);
-        User user = new User();
-        user.setId(1L);
-        task.setAssignedUser(user);
+        Map<String, Object> request = new HashMap<>();
+        request.put("task", task);
 
         when(taskService.createTask(eq(eventId), eq(userId), any(Task.class))).thenReturn(task);
 
-        ResponseEntity<?> response = taskController.createTask(eventId, userId, task);
+        ResponseEntity<Map<String, Object>> response = taskController.createTask(eventId, userId, request);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertTrue(response.getBody() instanceof Map);
-        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertEquals(1L, responseBody.get("taskId"));
-        assertEquals(eventId, responseBody.get("eventId"));
-        assertEquals(1L, responseBody.get("userId"));
+        Map<String, Object> responseBody = response.getBody();
+        assertTrue((Boolean) responseBody.get("success"));
+        assertEquals(Collections.singletonList(task), responseBody.get("data"));
     }
 
     /**
@@ -82,14 +78,19 @@ class TaskControllerUnitTest {
     void createTask_EventNotFound() throws Exception {
         Long eventId = 1L;
         Long userId = 1L;
-        Task task = new Task();
+        Map<String, Object> request = new HashMap<>();
+        request.put("task", new Task());
 
-        when(taskService.createTask(eq(eventId), eq(userId), any(Task.class))).thenThrow(new EventNotExistException("Event not found"));
+        when(taskService.createTask(eq(eventId), eq(userId), any(Task.class)))
+                .thenThrow(new EventNotExistException("Event not found"));
 
-        ResponseEntity<?> response = taskController.createTask(eventId, userId, task);
+        ResponseEntity<Map<String, Object>> response = taskController.createTask(eventId, userId, request);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Event not found", response.getBody());
+        Map<String, Object> responseBody = response.getBody();
+        assertFalse((Boolean) responseBody.get("success"));
+        assertEquals(Collections.emptyList(), responseBody.get("data"));
+        assertEquals("Event not found", responseBody.get("message"));
     }
 
     /**
@@ -104,10 +105,12 @@ class TaskControllerUnitTest {
 
         when(taskService.getTasksByEvent(eventId)).thenReturn(tasks);
 
-        ResponseEntity<?> response = taskController.getTasksByEvent(eventId);
+        ResponseEntity<Map<String, Object>> response = taskController.getTasksByEvent(eventId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(tasks, response.getBody());
+        Map<String, Object> responseBody = response.getBody();
+        assertTrue((Boolean) responseBody.get("success"));
+        assertEquals(tasks, responseBody.get("data"));
     }
 
     /**
@@ -119,12 +122,16 @@ class TaskControllerUnitTest {
     void getTasksByEvent_EventNotFound() throws Exception {
         Long eventId = 1L;
 
-        when(taskService.getTasksByEvent(eventId)).thenThrow(new EventNotExistException("Event not found"));
+        when(taskService.getTasksByEvent(eventId))
+                .thenThrow(new EventNotExistException("Event not found"));
 
-        ResponseEntity<?> response = taskController.getTasksByEvent(eventId);
+        ResponseEntity<Map<String, Object>> response = taskController.getTasksByEvent(eventId);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Event not found", response.getBody());
+        Map<String, Object> responseBody = response.getBody();
+        assertFalse((Boolean) responseBody.get("success"));
+        assertEquals(Collections.emptyList(), responseBody.get("data"));
+        assertEquals("Event not found", responseBody.get("message"));
     }
 
     /**
@@ -134,18 +141,18 @@ class TaskControllerUnitTest {
      */
     @Test
     void getTask_Success() throws Exception {
-        Long eventId = 1L;
         Long taskId = 1L;
         Task task = new Task();
 
-        when(taskService.getTaskByEventAndId(eventId, taskId)).thenReturn(task);
+        when(taskService.getTaskById(taskId)).thenReturn(task);
 
-        ResponseEntity<?> response = taskController.getTask(eventId, taskId);
+        ResponseEntity<Map<String, Object>> response = taskController.getTask(taskId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(task, response.getBody());
+        Map<String, Object> responseBody = response.getBody();
+        assertTrue((Boolean) responseBody.get("success"));
+        assertEquals(Collections.singletonList(task), responseBody.get("data"));
     }
-
     /**
      * Tests the case where the task ID being retrieved does not exist.
      *
@@ -153,15 +160,18 @@ class TaskControllerUnitTest {
      */
     @Test
     void getTask_TaskNotFound() throws Exception {
-        Long eventId = 1L;
         Long taskId = 1L;
 
-        when(taskService.getTaskByEventAndId(eventId, taskId)).thenThrow(new TaskNotExistException("Task not found"));
+        when(taskService.getTaskById(taskId))
+                .thenThrow(new TaskNotExistException("Task not found"));
 
-        ResponseEntity<?> response = taskController.getTask(eventId, taskId);
+        ResponseEntity<Map<String, Object>> response = taskController.getTask(taskId);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Task not found", response.getBody());
+        Map<String, Object> responseBody = response.getBody();
+        assertFalse((Boolean) responseBody.get("success"));
+        assertEquals(Collections.emptyList(), responseBody.get("data"));
+        assertEquals("Task not found", responseBody.get("message"));
     }
 
     /**
@@ -171,17 +181,18 @@ class TaskControllerUnitTest {
      */
     @Test
     void updateTaskStatus_Success() throws Exception {
-        Long eventId = 1L;
         Long taskId = 1L;
-        Map<String, Task.TaskStatus> statusUpdate = new HashMap<>();
-        statusUpdate.put("statusUpdate", Task.TaskStatus.COMPLETED);
+        Map<String, Object> request = new HashMap<>();
+        request.put("status", "COMPLETED");
 
-        doNothing().when(taskService).updateTaskStatus(eventId, taskId, Task.TaskStatus.COMPLETED);
+        doNothing().when(taskService).updateTaskStatus(taskId, Task.TaskStatus.COMPLETED);
 
-        ResponseEntity<?> response = taskController.updateTaskStatus(eventId, taskId, statusUpdate);
+        ResponseEntity<Map<String, Object>> response = taskController.updateTaskStatus(taskId, request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Task status updated successfully", response.getBody());
+        Map<String, Object> responseBody = response.getBody();
+        assertTrue((Boolean) responseBody.get("success"));
+        assertEquals(Collections.singletonList("Task status updated successfully"), responseBody.get("data"));
     }
 
     /**
@@ -189,14 +200,16 @@ class TaskControllerUnitTest {
      */
     @Test
     void updateTaskStatus_MissingStatus() {
-        Long eventId = 1L;
         Long taskId = 1L;
-        Map<String, Task.TaskStatus> statusUpdate = new HashMap<>();
+        Map<String, Object> request = new HashMap<>();
 
-        ResponseEntity<?> response = taskController.updateTaskStatus(eventId, taskId, statusUpdate);
+        ResponseEntity<Map<String, Object>> response = taskController.updateTaskStatus(taskId, request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Status is required", response.getBody());
+        Map<String, Object> responseBody = response.getBody();
+        assertFalse((Boolean) responseBody.get("success"));
+        assertEquals(Collections.emptyList(), responseBody.get("data"));
+        assertEquals("Status is required", responseBody.get("message"));
     }
 
     /**
@@ -206,18 +219,19 @@ class TaskControllerUnitTest {
      */
     @Test
     void updateTaskAssignedUser_Success() throws Exception {
-        Long eventId = 1L;
         Long taskId = 1L;
-        String newUserId = "2";
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", 2L);
 
-        when(userService.findUserById(1L)).thenReturn(new User());
         when(userService.findUserById(2L)).thenReturn(new User());
-        doNothing().when(taskService).updateTaskAssignedUser(eventId, taskId, 1L);
+        doNothing().when(taskService).updateTaskAssignedUser(taskId, 2L);
 
-        ResponseEntity<?> response = taskController.updateTaskAssignedUser(eventId, taskId, newUserId);
+        ResponseEntity<Map<String, Object>> response = taskController.updateTaskAssignedUser(taskId, request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Task assigned user updated successfully", response.getBody());
+        Map<String, Object> responseBody = response.getBody();
+        assertTrue((Boolean) responseBody.get("success"));
+        assertEquals(Collections.singletonList("Task assigned user updated successfully"), responseBody.get("data"));
     }
 
     /**
@@ -226,15 +240,21 @@ class TaskControllerUnitTest {
      */
     @Test
     void updateTaskAssignedUser_UserNotFound() {
-        Long eventId = 1L;
         Long taskId = 1L;
-        String newUserId = "100";
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", 100L);
 
-        doThrow(new UserNotExistException("User not found")).when(userService).findUserById(100L);
-        ResponseEntity<?> response = taskController.updateTaskAssignedUser(eventId, taskId, newUserId);
+        doThrow(new UserNotExistException("User not found"))
+                .when(userService).findUserById(100L);
+
+        ResponseEntity<Map<String, Object>> response =
+                taskController.updateTaskAssignedUser(taskId, request);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("User not found with ID: " + newUserId, response.getBody());
+        Map<String, Object> responseBody = response.getBody();
+        assertFalse((Boolean) responseBody.get("success"));
+        assertEquals(Collections.emptyList(), responseBody.get("data"));
+        assertEquals("User not found with ID: 100", responseBody.get("message"));
     }
 
     /**
@@ -244,15 +264,16 @@ class TaskControllerUnitTest {
      */
     @Test
     void deleteTask_Success() throws Exception {
-        Long eventId = 1L;
         Long taskId = 1L;
 
-        doNothing().when(taskService).deleteTask(eventId, taskId);
+        doNothing().when(taskService).deleteTask(taskId);
 
-        ResponseEntity<?> response = taskController.deleteTask(eventId, taskId);
+        ResponseEntity<Map<String, Object>> response = taskController.deleteTask(taskId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Task deleted successfully", response.getBody());
+        Map<String, Object> responseBody = response.getBody();
+        assertTrue((Boolean) responseBody.get("success"));
+        assertEquals(Collections.singletonList("Task deleted successfully"), responseBody.get("data"));
     }
 
     /**
@@ -263,14 +284,17 @@ class TaskControllerUnitTest {
      */
     @Test
     void deleteTask_TaskNotFound() throws Exception {
-        Long eventId = 1L;
         Long taskId = 1L;
 
-        doThrow(new TaskNotExistException("Task not found")).when(taskService).deleteTask(eventId, taskId);
+        doThrow(new TaskNotExistException("Task not found"))
+                .when(taskService).deleteTask(taskId);
 
-        ResponseEntity<?> response = taskController.deleteTask(eventId, taskId);
+        ResponseEntity<Map<String, Object>> response = taskController.deleteTask(taskId);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Task not found", response.getBody());
+        Map<String, Object> responseBody = response.getBody();
+        assertFalse((Boolean) responseBody.get("success"));
+        assertEquals(Collections.emptyList(), responseBody.get("data"));
+        assertEquals("Task not found", responseBody.get("message"));
     }
 }
