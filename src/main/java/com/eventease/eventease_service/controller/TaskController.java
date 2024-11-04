@@ -43,12 +43,12 @@ public class TaskController {
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (TaskNotExistException | EventNotExistException e) {
             response.put("success", false);
-            response.put("data", Collections.emptyList());
+            response.put("data", null);
             response.put("message", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("data", Collections.emptyList());
+            response.put("data", null);
             response.put("message", "Error creating task: " + e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -64,12 +64,12 @@ public class TaskController {
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (TaskNotExistException | EventNotExistException e) {
             response.put("success", false);
-            response.put("data", Collections.emptyList());
+            response.put("data", null);
             response.put("message", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("data", Collections.emptyList());
+            response.put("data", null);
             response.put("message", "Error fetching tasks: " + e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -79,20 +79,15 @@ public class TaskController {
     public ResponseEntity<Map<String, Object>> getTask(@PathVariable Long taskId) {
         Map<String, Object> response = new HashMap<>();
         try {
-            Task task = taskService.getTaskById(taskId);  // Modify service method to get by taskId only
+            Task task = taskService.getTaskById(taskId);
             response.put("success", true);
-            response.put("data", Collections.singletonList(task));
+            response.put("data", task);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (TaskNotExistException e) {
             response.put("success", false);
-            response.put("data", Collections.emptyList());
+            response.put("data", null);
             response.put("message", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("data", Collections.emptyList());
-            response.put("message", "Error fetching task: " + e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -101,26 +96,32 @@ public class TaskController {
             @PathVariable Long taskId,
             @RequestBody Map<String, Object> request) {
         Map<String, Object> response = new HashMap<>();
+        if (!request.containsKey("status") || request.get("status") == null) {
+            response.put("success", false);
+            response.put("data", null);
+            response.put("message", "Status is required");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
         try {
             Task.TaskStatus newStatus = Task.TaskStatus.valueOf(request.get("status").toString());
             if (newStatus == null) {
                 response.put("success", false);
-                response.put("data", Collections.emptyList());
+                response.put("data", null);
                 response.put("message", "Status is required");
                 return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
             }
-            taskService.updateTaskStatus(taskId, newStatus);  // Modify service method
+            taskService.updateTaskStatus(taskId, newStatus);
             response.put("success", true);
             response.put("data", Collections.singletonList("Task status updated successfully"));
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (TaskNotExistException e) {
             response.put("success", false);
-            response.put("data", Collections.emptyList());
+            response.put("data", null);
             response.put("message", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("data", Collections.emptyList());
+            response.put("data", null);
             response.put("message", "Error updating task status: " + e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -137,22 +138,22 @@ public class TaskController {
                 userService.findUserById(newUserId);
             } catch (UserNotExistException e) {
                 response.put("success", false);
-                response.put("data", Collections.emptyList());
+                response.put("data", null);
                 response.put("message", "User not found with ID: " + newUserId);
                 return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
             }
-            taskService.updateTaskAssignedUser(taskId, newUserId);  // Modify service method
+            taskService.updateTaskAssignedUser(taskId, newUserId);
             response.put("success", true);
             response.put("data", Collections.singletonList("Task assigned user updated successfully"));
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (TaskNotExistException e) {
             response.put("success", false);
-            response.put("data", Collections.emptyList());
+            response.put("data", null);
             response.put("message", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("data", Collections.emptyList());
+            response.put("data", null);
             response.put("message", "Error updating assigned user: " + e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -162,18 +163,18 @@ public class TaskController {
     public ResponseEntity<Map<String, Object>> deleteTask(@PathVariable Long taskId) {
         Map<String, Object> response = new HashMap<>();
         try {
-            taskService.deleteTask(taskId);  // Modify service method
+            taskService.deleteTask(taskId);
             response.put("success", true);
             response.put("data", Collections.singletonList("Task deleted successfully"));
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (TaskNotExistException e) {
             response.put("success", false);
-            response.put("data", Collections.emptyList());
+            response.put("data", null);
             response.put("message", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("data", Collections.emptyList());
+            response.put("data", null);
             response.put("message", "Error deleting task: " + e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -18,7 +18,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findByEventId(Long eventId);
 
-    Optional<Task> findByIdAndEventId(Long taskId, Long eventId);
 
     @Modifying
     @Query("UPDATE Task t SET t.status = :status WHERE t.id = :taskId AND t.event.id = :eventId")

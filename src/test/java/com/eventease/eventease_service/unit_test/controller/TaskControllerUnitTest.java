@@ -89,7 +89,7 @@ class TaskControllerUnitTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         Map<String, Object> responseBody = response.getBody();
         assertFalse((Boolean) responseBody.get("success"));
-        assertEquals(Collections.emptyList(), responseBody.get("data"));
+        assertEquals(null, responseBody.get("data"));
         assertEquals("Event not found", responseBody.get("message"));
     }
 
@@ -130,7 +130,7 @@ class TaskControllerUnitTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         Map<String, Object> responseBody = response.getBody();
         assertFalse((Boolean) responseBody.get("success"));
-        assertEquals(Collections.emptyList(), responseBody.get("data"));
+        assertEquals(null, responseBody.get("data"));
         assertEquals("Event not found", responseBody.get("message"));
     }
 
@@ -151,7 +151,7 @@ class TaskControllerUnitTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Map<String, Object> responseBody = response.getBody();
         assertTrue((Boolean) responseBody.get("success"));
-        assertEquals(Collections.singletonList(task), responseBody.get("data"));
+        assertEquals(task, responseBody.get("data"));
     }
     /**
      * Tests the case where the task ID being retrieved does not exist.
@@ -170,7 +170,7 @@ class TaskControllerUnitTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         Map<String, Object> responseBody = response.getBody();
         assertFalse((Boolean) responseBody.get("success"));
-        assertEquals(Collections.emptyList(), responseBody.get("data"));
+        assertEquals(null, responseBody.get("data"));
         assertEquals("Task not found", responseBody.get("message"));
     }
 
@@ -208,7 +208,7 @@ class TaskControllerUnitTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Map<String, Object> responseBody = response.getBody();
         assertFalse((Boolean) responseBody.get("success"));
-        assertEquals(Collections.emptyList(), responseBody.get("data"));
+        assertEquals(null, responseBody.get("data"));
         assertEquals("Status is required", responseBody.get("message"));
     }
 
@@ -253,7 +253,7 @@ class TaskControllerUnitTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         Map<String, Object> responseBody = response.getBody();
         assertFalse((Boolean) responseBody.get("success"));
-        assertEquals(Collections.emptyList(), responseBody.get("data"));
+        assertEquals(null, responseBody.get("data"));
         assertEquals("User not found with ID: 100", responseBody.get("message"));
     }
 
@@ -294,7 +294,7 @@ class TaskControllerUnitTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         Map<String, Object> responseBody = response.getBody();
         assertFalse((Boolean) responseBody.get("success"));
-        assertEquals(Collections.emptyList(), responseBody.get("data"));
+        assertEquals(null, responseBody.get("data"));
         assertEquals("Task not found", responseBody.get("message"));
     }
 }

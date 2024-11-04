@@ -76,37 +76,26 @@ public class TaskService {
      */
 
     @Transactional
-    public void updateTaskStatus(Long taskId, Task.TaskStatus newStatus) throws TaskNotExistException, EventNotExistException {        // Fetch the task using the task ID
-        Task task = taskRepository.findById(taskId).orElseThrow(() -> new TaskNotExistException("Task not found"));
-
-        // Update the status of the task
+    public void updateTaskStatus(Long taskId, Task.TaskStatus newStatus) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotExistException("Task not found with ID: " + taskId));
         task.setStatus(newStatus);
-
-        // Save the updated task
         taskRepository.save(task);
     }
 
-
-    /**
-     * Updates the user assigned to a specific task.
-     *
-     * @param taskId the ID of the task to update
-     * @param userId the ID of the new assigned user
-     * @throws TaskNotExistException if the task is not found
-     */
     @Transactional
-    public void updateTaskAssignedUser(Long taskId, Long userId) throws TaskNotExistException, EventNotExistException, UserNotExistException {
-        // Fetch the user entity
+    public void updateTaskAssignedUser(Long taskId, Long userId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotExistException("Task not found with ID: " + taskId));
+
+        // Then check if user exists
         User user = userService.findUserById(userId);
         if (user == null) {
-            throw new UserNotExistException("User not found");
+            throw new UserNotExistException("User not found with ID: " + userId);
         }
 
-        // Update the task's assigned user
-        int rowsUpdated = taskRepository.updateTaskAssignedUser(taskId, user);
-        if (rowsUpdated == 0) {
-            throw new TaskNotExistException("Task or Event not found");
-        }
+        task.setAssignedUser(user);
+        taskRepository.save(task);
     }
 
 
@@ -116,7 +105,7 @@ public class TaskService {
      * @param taskId the ID of the task to delete
      */
     public void deleteTask(Long taskId) {
-        taskRepository.deleteById(taskId);
+        taskRepository.deleteTask(taskId);
     }
 
     /**
