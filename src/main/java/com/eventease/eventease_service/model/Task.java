@@ -44,7 +44,7 @@ public class Task implements Serializable {
     @NotNull(message = "Event is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
-    @JsonIgnore
+    @JsonProperty("eventID")
     private Event event;
 
     @NotNull(message = "Assigned user is required")

@@ -88,10 +88,10 @@ public class TaskServiceUnitTest {
   }
 
   @Test
-  void testGetTaskByEventAndId_TaskExists() {
-    when(taskRepository.findByIdAndEventId(anyLong(), anyLong())).thenReturn(Optional.of(task));
+  void testGetTaskId_TaskExists() {
+    when(taskRepository.findById(anyLong())).thenReturn(Optional.of(task));
 
-    Task result = taskService.getTaskByEventAndId(1L, 1L);
+    Task result = taskService.getTaskById(1L);
 
     assertNotNull(result);
     assertEquals(task, result);
@@ -99,61 +99,88 @@ public class TaskServiceUnitTest {
 
   @Test
   void testGetTaskByEventAndId_TaskNotExist() {
-    when(taskRepository.findByIdAndEventId(anyLong(), anyLong())).thenReturn(Optional.empty());
+    when(taskRepository.findById(anyLong())).thenReturn(Optional.empty());
 
     TaskNotExistException exception = assertThrows(TaskNotExistException.class,
-            () -> taskService.getTaskByEventAndId(1L, 1L));
-    assertEquals("Task not found with ID: 1 for event ID: 1", exception.getMessage());
+            () -> taskService.getTaskById(1L));
+    assertEquals("Task not found with ID: 1", exception.getMessage());
   }
 
   @Test
   void testUpdateTaskStatus_TaskExists() {
     when(taskRepository.findById(anyLong())).thenReturn(Optional.of(task));
 
-    assertDoesNotThrow(() -> taskService.updateTaskStatus(1L, 1L, Task.TaskStatus.IN_PROGRESS));
-    verify(taskRepository).save(task); // Ensure the task is saved after updating the status
+    assertDoesNotThrow(() -> taskService.updateTaskStatus( 1L, Task.TaskStatus.IN_PROGRESS));
+    verify(taskRepository).save(task);
   }
 
   @Test
   void testUpdateTaskStatus_TaskNotExist() {
     when(taskRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-    assertThrows(TaskNotExistException.class, () -> taskService.updateTaskStatus(1L, 1L, Task.TaskStatus.IN_PROGRESS));
+    assertThrows(TaskNotExistException.class, () -> taskService.updateTaskStatus(1L, Task.TaskStatus.IN_PROGRESS));
   }
 
   @Test
   void testUpdateTaskAssignedUser_TaskExists() {
-    when(userService.findUserById(anyLong())).thenReturn(user);
-    when(taskRepository.updateTaskAssignedUser(anyLong(), anyLong(), any(User.class))).thenReturn(1);
+    Long taskId = 1L;
+    Long userId = 1L;
 
-    assertDoesNotThrow(() -> taskService.updateTaskAssignedUser(1L, 1L, 1L));
-    verify(taskRepository).updateTaskAssignedUser(1L, 1L, user);
+    when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+    when(userService.findUserById(userId)).thenReturn(user);
+
+    assertDoesNotThrow(() -> taskService.updateTaskAssignedUser(taskId, userId));
+
+    verify(taskRepository).findById(taskId);
+    verify(userService).findUserById(userId);
+    verify(taskRepository).save(task);
   }
 
   @Test
   void testUpdateTaskAssignedUser_TaskNotExist() {
-    when(userService.findUserById(anyLong())).thenReturn(user);
-    when(taskRepository.updateTaskAssignedUser(anyLong(), anyLong(), any(User.class))).thenReturn(0);
+    Long taskId = 1L;
+    Long userId = 1L;
 
-    assertThrows(TaskNotExistException.class,
-            () -> taskService.updateTaskAssignedUser(1L, 1L, 1L));
+    when(taskRepository.findById(taskId)).thenReturn(Optional.empty());
+
+    TaskNotExistException exception = assertThrows(
+            TaskNotExistException.class,
+            () -> taskService.updateTaskAssignedUser(taskId, userId)
+    );
+
+    assertEquals("Task not found with ID: " + taskId, exception.getMessage());
+
+    verify(taskRepository).findById(taskId);
+    verify(userService, never()).findUserById(anyLong());
+    verify(taskRepository, never()).save(any());
   }
 
   @Test
   void testUpdateTaskAssignedUser_UserNotExist() {
-    when(userService.findUserById(anyLong())).thenThrow(new UserNotExistException("User not found"));
+    Long taskId = 1L;
+    Long userId = 1L;
 
-    assertThrows(UserNotExistException.class,
-            () -> taskService.updateTaskAssignedUser(1L, 1L, 100L));
-    verify(taskRepository, never()).updateTaskAssignedUser(anyLong(), anyLong(), any(User.class));
+    when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+    when(userService.findUserById(userId)).thenReturn(null);
+
+    UserNotExistException exception = assertThrows(
+            UserNotExistException.class,
+            () -> taskService.updateTaskAssignedUser(taskId, userId)
+    );
+
+    assertEquals("User not found with ID: " + userId, exception.getMessage());
+
+    verify(taskRepository).findById(taskId);
+    verify(userService).findUserById(userId);
+    verify(taskRepository, never()).save(any());
   }
 
   @Test
   void testDeleteTask() {
-    doNothing().when(taskRepository).deleteByIdAndEventId(anyLong(), anyLong());
+    doNothing().when(taskRepository).deleteTask(anyLong());
 
-    assertDoesNotThrow(() -> taskService.deleteTask(1L, 1L));
-    verify(taskRepository).deleteByIdAndEventId(1L, 1L);
+    assertDoesNotThrow(() -> taskService.deleteTask(1L));
+    verify(taskRepository).deleteTask(1L);
   }
 
   @Test
@@ -169,19 +196,19 @@ public class TaskServiceUnitTest {
   }
 
   @Test
-  void testFindTaskById_TaskExists() {
+  void testGetTaskById_TaskExists() {
     when(taskRepository.findById(anyLong())).thenReturn(Optional.of(task));
 
-    Task result = taskService.findTaskById(1L);
+    Task result = taskService.getTaskById(1L);
 
     assertNotNull(result);
     assertEquals(task, result);
   }
 
   @Test
-  void testFindTaskById_TaskNotExist() {
+  void testGetTaskById_TaskNotExist() {
     when(taskRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-    assertThrows(TaskNotExistException.class, () -> taskService.findTaskById(1L));
+    assertThrows(TaskNotExistException.class, () -> taskService.getTaskById(1L));
   }
 }
