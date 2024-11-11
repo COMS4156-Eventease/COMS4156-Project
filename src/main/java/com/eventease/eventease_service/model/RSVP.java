@@ -37,5 +37,4 @@ public class RSVP {
 
   private String eventRole;
 
-
 }
