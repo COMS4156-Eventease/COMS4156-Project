@@ -1,5 +1,6 @@
 package com.eventease.eventease_service.service;
 
+import com.eventease.eventease_service.exception.EventFullException;
 import com.eventease.eventease_service.exception.RSVPExistsException;
 import com.eventease.eventease_service.exception.RSVPNotExistException;
 import com.eventease.eventease_service.model.Event;
@@ -7,11 +8,7 @@ import com.eventease.eventease_service.model.RSVP;
 import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.repository.RSVPRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Map;
@@ -32,6 +29,14 @@ public class RSVPService {
   public RSVP createRSVP(String eventId, String userId, RSVP rsvp) {
     Event event = eventService.findById(Long.parseLong(eventId));
     User user = userService.findUserById(Long.parseLong(userId));
+
+    // check if the event is full
+    int currentRSVPCount = rsvpRepository.countByEvent(event);
+    if (currentRSVPCount >= event.getCapacity()) {
+      throw new EventFullException("Event is already at full capacity");
+    }
+
+    // check duplicate RSVP
     Optional<RSVP> rsvpCheck= rsvpRepository.findByUserAndEvent(user, event);
     if(rsvpCheck.isPresent()) {
       throw (new RSVPExistsException("RSVP Already Exists"));
@@ -66,7 +71,7 @@ public class RSVPService {
     User user = userService.findUserById(Long.parseLong(userId));
 
     Optional<RSVP> optionalRSVP = rsvpRepository.findByUserAndEvent(user, event);
-    if (!optionalRSVP.isPresent()) {
+    if (optionalRSVP.isEmpty()) {
       throw new RSVPNotExistException("RSVP does not exist for this event and user");
     }
 
