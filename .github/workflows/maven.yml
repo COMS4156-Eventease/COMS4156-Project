@@ -18,6 +18,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      TWILIO_ACCOUNT_SID: test_account_sid
+      TWILIO_AUTH_TOKEN: test_auth_token
+      TWILIO_PHONE_NUMBER: +1234567890
+      SPRING_PROFILES_ACTIVE: test
+
     services:
       mysql:
         image: mysql:8.0
@@ -57,6 +63,11 @@ jobs:
 
       - name: Run unit tests
         run: mvn test
+        env:
+          TWILIO_ACCOUNT_SID: test_account_sid
+          TWILIO_AUTH_TOKEN: test_auth_token
+          TWILIO_PHONE_NUMBER: +1234567890
+          SPRING_PROFILES_ACTIVE: test
 
       - name: Run Jacoco code coverage report
         run: mvn jacoco:report
