@@ -30,9 +30,8 @@ public class RSVPService {
     Event event = eventService.findById(Long.parseLong(eventId));
     User user = userService.findUserById(Long.parseLong(userId));
 
-    // check if the event is full
-    int currentRSVPCount = rsvpRepository.countByEvent(event);
-    if (currentRSVPCount >= event.getCapacity()) {
+    // check if the event is full;
+    if (event.getRsvpCount() >= event.getCapacity()) {
       throw new EventFullException("Event is already at full capacity");
     }
 
@@ -43,6 +42,7 @@ public class RSVPService {
     }
     rsvp.setEvent(event);
     rsvp.setUser(user);
+    event.setRsvpCount(event.getRsvpCount() + 1);
     return rsvpRepository.save(rsvp);
   }
 
@@ -60,6 +60,7 @@ public class RSVPService {
     if (optionalRSVP.isPresent()) {
       RSVP rsvp = optionalRSVP.get();
       rsvpRepository.delete(rsvp);
+      event.setRsvpCount(event.getRsvpCount() - 1);
     } else {
       throw new RSVPNotExistException("RSVP not found");
     }
