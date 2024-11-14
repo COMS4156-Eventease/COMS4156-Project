@@ -17,7 +17,7 @@ public class NotificationController {
 
     @GetMapping("/send-notification")
     public String sendNotification() {
-        String recipientNumber = "+2135514209";
+        String recipientNumber = "+12135514209";
         String message = "Hello! This is a test notification from EventEase.";
 
         twilioService.sendSms(recipientNumber, message);

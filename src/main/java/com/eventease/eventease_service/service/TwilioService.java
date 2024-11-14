@@ -15,7 +15,13 @@ public class TwilioService {
     @Autowired
     public TwilioService(TwilioConfig twilioConfig) {
         this.twilioConfig = twilioConfig;
-        Twilio.init(twilioConfig.getAccountSid(), twilioConfig.getAuthToken());
+        initializeTwilio();
+    }
+
+    private void initializeTwilio() {
+        if (twilioConfig.getAccountSid() != null && twilioConfig.getAuthToken() != null) {
+            Twilio.init(twilioConfig.getAccountSid(), twilioConfig.getAuthToken());
+        }
     }
 
     public void sendSms(String to, String messageBody) {

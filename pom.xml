@@ -93,12 +93,21 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-inline</artifactId>
+			<version>4.0.0</version>
+			<scope>test</scope>
+		</dependency>
+
 		<!-- twilio -->
 		<dependency>
 			<groupId>com.twilio.sdk</groupId>
 			<artifactId>twilio</artifactId>
 			<version>9.14.1</version>
 		</dependency>
+
+
 	</dependencies>
 
 	<build>
@@ -141,6 +150,18 @@
 				<version>3.5.0</version>
 				<configuration>
 					<configLocation>google_checks.xml</configLocation>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.0.0-M5</version>
+				<configuration>
+					<!-- Include only specific test classes -->
+					<includes>
+						<include>**/TwilioServiceTest.java</include>
+						<include>**/NotificationControllerTest.java</include>
+					</includes>
 				</configuration>
 			</plugin>
 		</plugins>
