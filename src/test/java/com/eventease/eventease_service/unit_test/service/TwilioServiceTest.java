@@ -31,6 +31,9 @@ class TwilioServiceTest {
     private static final String TEST_ACCOUNT_SID = "TEST_ACCOUNT_SID";
     private static final String TEST_AUTH_TOKEN = "TEST_AUTH_TOKEN";
 
+    private static final String TEST_ACCOUNT_SID = "TEST_ACCOUNT_SID";
+    private static final String TEST_AUTH_TOKEN = "TEST_AUTH_TOKEN";
+
     private void setupMocks() {
         twilioMock = mockStatic(Twilio.class);
         messageMock = mockStatic(Message.class);
@@ -43,7 +46,7 @@ class TwilioServiceTest {
         messageInstanceMock = mock(Message.class);
         messageCreatorMock = mock(MessageCreator.class);
 
-        when(messageInstanceMock.getSid()).thenReturn("SMaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"); // Format matches real Twilio message SIDs
+        when(messageInstanceMock.getSid()).thenReturn("SMaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         when(messageCreatorMock.create()).thenReturn(messageInstanceMock);
 
         messageMock.when(() -> Message.creator(
