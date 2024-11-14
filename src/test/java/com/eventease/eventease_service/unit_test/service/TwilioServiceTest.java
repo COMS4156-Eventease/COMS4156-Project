@@ -32,21 +32,30 @@ class TwilioServiceTest {
     private static final String TEST_AUTH_TOKEN = "TEST_AUTH_TOKEN";
 
 
-    private void setupMocks() {
+    @BeforeEach
+    void setupMocks() {
+        // Initialize static mocks for Twilio and Message classes
         twilioMock = mockStatic(Twilio.class);
         messageMock = mockStatic(Message.class);
 
+        // Mock TwilioConfig
         twilioConfig = mock(TwilioConfig.class);
         when(twilioConfig.getAccountSid()).thenReturn(TEST_ACCOUNT_SID);
         when(twilioConfig.getAuthToken()).thenReturn(TEST_AUTH_TOKEN);
         when(twilioConfig.getPhoneNumber()).thenReturn(VALID_TWILIO_NUMBER);
 
+        // Instantiate TwilioService with the mocked TwilioConfig
+        twilioService = new TwilioService(twilioConfig);
+
+        // Mock Message and Message.Creator objects
         messageInstanceMock = mock(Message.class);
         messageCreatorMock = mock(MessageCreator.class);
 
+        // Set up mock behavior for Message instance and creator
         when(messageInstanceMock.getSid()).thenReturn("SMaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         when(messageCreatorMock.create()).thenReturn(messageInstanceMock);
 
+        // Mock the Message.creator() method to return the mock Message.Creator object
         messageMock.when(() -> Message.creator(
                 any(PhoneNumber.class),
                 any(PhoneNumber.class),
