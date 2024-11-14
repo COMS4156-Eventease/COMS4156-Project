@@ -191,4 +191,40 @@ public class RSVPController {
     }
   }
 
+  /**
+   * Endpoint for checking in a user to an event
+   * This method handles POST requests to check in a user to an event;
+   *
+   * @param eventId                 the ID of the event
+   * @param userId                  the ID of the user being checked in
+   *
+   * @return                        a ResponseEntity with a success message
+   *                                or an error message if the RSVP does not exist
+   */
+  @RequestMapping(value = "/rsvp/checkin/{userId}", method = RequestMethod.POST)
+  public ResponseEntity<?> checkInUser(@PathVariable String eventId, @PathVariable String userId) {
+    Map<String, Object> response = new HashMap<>();
+    try {
+      // Check-in logic in RSVPService
+      rsvpService.checkInUser(eventId, userId);
+
+      response.put("success", true);
+      response.put("message", "User successfully checked in");
+
+      return new ResponseEntity<>(response, HttpStatus.OK);
+
+    } catch (EventNotExistException | UserNotExistException | RSVPNotExistException error) {
+      response.put("success", false);
+      response.put("message", error.getMessage());
+
+      return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+
+    } catch (Exception error) {
+      response.put("success", false);
+      response.put("message", error.getMessage());
+
+      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
 }

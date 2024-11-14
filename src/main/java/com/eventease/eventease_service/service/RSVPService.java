@@ -1,8 +1,6 @@
 package com.eventease.eventease_service.service;
 
-import com.eventease.eventease_service.exception.EventFullException;
-import com.eventease.eventease_service.exception.RSVPExistsException;
-import com.eventease.eventease_service.exception.RSVPNotExistException;
+import com.eventease.eventease_service.exception.*;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.RSVP;
 import com.eventease.eventease_service.model.User;
@@ -92,5 +90,31 @@ public class RSVPService {
     }
 
     return rsvpRepository.save(rsvp);
+  }
+
+  public void checkInUser(String eventId, String userId) {
+    Event event = eventService.findById(Long.parseLong(eventId));
+    if (event == null) {
+      throw new EventNotExistException("Event does not exist.");
+    }
+
+    User user = userService.findUserById(Long.parseLong(userId));
+    if(user == null) {
+      throw new UserNotExistException("User does not exist.");
+    }
+
+    RSVP rsvp = rsvpRepository.findByUserAndEvent(user, event)
+            .orElseThrow(() -> new RSVPNotExistException("No RSVP found for this user at the event."));
+
+    // Check if the user is already checked in
+    if (rsvp.getStatus().equals("CheckedIn")) {
+      throw new IllegalArgumentException("User has already been checked in.");
+    }
+
+    rsvp.setStatus("CheckedIn");
+    rsvpRepository.save(rsvp);
+
+    event.setAttendanceCount(event.getAttendanceCount() + 1);
+    eventService.saveEvent(event);
   }
 }
