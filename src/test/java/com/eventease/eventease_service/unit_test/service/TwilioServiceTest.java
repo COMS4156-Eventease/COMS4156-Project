@@ -31,8 +31,6 @@ class TwilioServiceTest {
     private static final String TEST_ACCOUNT_SID = "TEST_ACCOUNT_SID";
     private static final String TEST_AUTH_TOKEN = "TEST_AUTH_TOKEN";
 
-    private static final String TEST_ACCOUNT_SID = "TEST_ACCOUNT_SID";
-    private static final String TEST_AUTH_TOKEN = "TEST_AUTH_TOKEN";
 
     private void setupMocks() {
         twilioMock = mockStatic(Twilio.class);
