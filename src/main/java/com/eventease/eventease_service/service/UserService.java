@@ -5,6 +5,7 @@ import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.repository.UserRepository;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -15,7 +16,13 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public void addUser(User user) {
+        // hash the password before saving
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
         // Set any additional logic if necessary (e.g., default values)
         user.setCreatedAt(new Timestamp(System.currentTimeMillis()));
 
@@ -70,6 +77,11 @@ public class UserService {
           throw new UserNotExistException("User is not found.");
       }
       return user;
+  }
+
+  public User findByUsername(String username)
+  {
+      return userRepository.findByUsername(username);
   }
 
     public void deleteUser(Long id) {

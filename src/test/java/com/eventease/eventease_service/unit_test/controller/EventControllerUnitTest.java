@@ -15,72 +15,97 @@ import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.repository.EventRepository;
 import com.eventease.eventease_service.service.EventService;
 import com.eventease.eventease_service.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @WebMvcTest(EventController.class)
 public class EventControllerUnitTest {
 
-  @Autowired
   private MockMvc mockMvc;
 
-  @MockBean
+  @Mock
   private EventService eventService;
 
-  @MockBean
+  @Mock
   private EventRepository eventRepository;
 
-  @MockBean
+  @Mock
   private UserService userService;
 
+  @InjectMocks
+  private EventController eventController;
+
+  private static final String BASE_URL = "/api/events";
+  private static final String CONTENT_TYPE = MediaType.APPLICATION_JSON_VALUE;
+
+  private static final String EVENT_REQUEST_BODY = """
+        {
+            "name": "Event Title",
+            "description": "Event description",
+            "location": "123 Venue St.",
+            "date": "2024-11-15",
+            "time": "10:30",
+            "capacity": 100,
+            "budget": 1200
+        }
+        """;
+
+  private static final String UPDATE_EVENT_REQUEST_BODY = """
+        {
+            "name": "Updated Event",
+            "capacity": 200
+        }
+        """;
+
+  @BeforeEach
+  void setUp() {
+    mockMvc = MockMvcBuilders.standaloneSetup(eventController).build();
+  }
 
   @Test
   public void addEventSuccessTest() throws Exception {
-    User organizer = new User(); // Create a dummy user
-    organizer.setId(1L);
-
-    Event event = new Event();
-    event.setId(123L);
-    event.setName("Event Title");
+    User organizer = createTestUser(1L);
+    Event event = createTestEvent(123L, "Event Title");
 
     when(userService.findUserById(1L)).thenReturn(organizer);
     doNothing().when(eventService).add(any(Event.class));
 
-    mockMvc.perform(post("/api/events?organizerId=1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"name\": \"Event Title\", \"description\": \"Event description\", \"location\": \"123 Venue St.\", \"date\": \"2024-11-15\", \"time\": \"10:30\", \"capacity\": 100, \"budget\": 1200 }"))
+    mockMvc.perform(post(BASE_URL + "?organizerId=1")
+            .contentType(CONTENT_TYPE)
+            .content(EVENT_REQUEST_BODY))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.organizerId").value(1));
   }
 
   @Test
   public void addEventFailTest() throws Exception {
-    when(userService.findUserById(1L)).thenThrow(new UserNotExistException("User is not found"));
+    when(userService.findUserById(1L))
+        .thenThrow(new UserNotExistException("User is not found"));
 
-    mockMvc.perform(post("/api/events?organizerId=1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"name\": \"Event Title\", \"description\": \"Event description\", \"location\": \"123 Venue St.\", \"date\": \"2024-11-15\", \"time\": \"10:30\", \"capacity\": 100, \"budget\": 1200 }"))
+    mockMvc.perform(post(BASE_URL + "?organizerId=1")
+            .contentType(CONTENT_TYPE)
+            .content(EVENT_REQUEST_BODY))
         .andExpect(status().isNotFound())
         .andExpect(content().string("Organizer not found"));
   }
 
   @Test
   public void getEventByIdSuccessTest() throws Exception {
-    Event event = new Event();
-    event.setId(123L);
-    event.setName("Event Title");
-
+    Event event = createTestEvent(123L, "Event Title");
     when(eventService.findById(123L)).thenReturn(event);
 
-    mockMvc.perform(get("/api/events/123"))
+    mockMvc.perform(get(BASE_URL + "/123"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(123))
         .andExpect(jsonPath("$.name").value("Event Title"));
@@ -88,75 +113,85 @@ public class EventControllerUnitTest {
 
   @Test
   public void getEventByIdFailTest() throws Exception {
-    when(eventService.findById(123L)).thenThrow(new EventNotExistException("Event not found"));
+    when(eventService.findById(123L))
+        .thenThrow(new EventNotExistException("Event not found"));
 
-
-    mockMvc.perform(get("/api/events/123"))
+    mockMvc.perform(get(BASE_URL + "/123"))
         .andExpect(status().isNotFound())
         .andExpect(content().string("Event not found"));
   }
 
   @Test
   public void getEventsSuccessTest() throws Exception {
-    Event event1 = new Event();
-    event1.setId(1L);
-    event1.setName("Event 1");
-    event1.setDate(LocalDate.of(2024, 11, 15));
+    List<Event> events = Arrays.asList(
+        createTestEvent(1L, "Event 1", LocalDate.of(2024, 11, 15)),
+        createTestEvent(2L, "Event 2", LocalDate.of(2024, 11, 20))
+    );
 
-    Event event2 = new Event();
-    event2.setId(2L);
-    event2.setName("Event 2");
-    event2.setDate(LocalDate.of(2024, 11, 20));
+    when(eventService.findByDateBetween(
+        LocalDate.of(2024, 11, 1),
+        LocalDate.of(2024, 11, 30)
+    )).thenReturn(events);
 
-    List<Event> events = Arrays.asList(event1, event2);
-
-    when(eventService.findByDateBetween(LocalDate.of(2024, 11, 1), LocalDate.of(2024, 11, 30))).thenReturn(events);
-
-    mockMvc.perform(get("/api/events?startDate=2024-11-01&endDate=2024-11-30"))
+    mockMvc.perform(get(BASE_URL + "?startDate=2024-11-01&endDate=2024-11-30"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value(1))
         .andExpect(jsonPath("$[1].id").value(2));
   }
 
-  // Test for failing to retrieve events within a date range
   @Test
   public void getEventsFailTest() throws Exception {
-    when(eventService.findByDateBetween(LocalDate.of(2024, 11, 1), LocalDate.of(2024, 11, 30))).thenReturn(
-        Collections.emptyList());
+    when(eventService.findByDateBetween(
+        LocalDate.of(2024, 11, 1),
+        LocalDate.of(2024, 11, 30)
+    )).thenReturn(Collections.emptyList());
 
-    mockMvc.perform(get("/api/events?startDate=2024-11-01&endDate=2024-11-30"))
+    mockMvc.perform(get(BASE_URL + "?startDate=2024-11-01&endDate=2024-11-30"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$").isEmpty());
   }
 
   @Test
   public void updateEventSuccessTest() throws Exception {
-    Event existingEvent = new Event();
-    existingEvent.setId(123L);
-    existingEvent.setName("Old Event");
-
-    Event updatedEvent = new Event();
-    updatedEvent.setName("Updated Event");
-
+    Event existingEvent = createTestEvent(123L, "Old Event");
     when(eventService.findById(123L)).thenReturn(existingEvent);
     doNothing().when(eventService).updateEvent(eq(123L), any(Event.class));
 
-    mockMvc.perform(patch("/api/events/123")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"name\": \"Updated Event\", \"capacity\": 200 }"))
+    mockMvc.perform(patch(BASE_URL + "/123")
+            .contentType(CONTENT_TYPE)
+            .content(UPDATE_EVENT_REQUEST_BODY))
         .andExpect(status().isOk())
         .andExpect(content().string("Event updated successfully"));
   }
 
-  // Test for failing to update an event (event not found)
   @Test
   public void updateEventFailTest() throws Exception {
-    when(eventService.findById(123L)).thenThrow(new EventNotExistException("Event not found"));
+    when(eventService.findById(123L))
+        .thenThrow(new EventNotExistException("Event not found"));
 
-    mockMvc.perform(patch("/api/events/123")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"name\": \"Updated Event\", \"capacity\": 200 }"))
+    mockMvc.perform(patch(BASE_URL + "/123")
+            .contentType(CONTENT_TYPE)
+            .content(UPDATE_EVENT_REQUEST_BODY))
         .andExpect(status().isNotFound())
         .andExpect(content().string("Event not found"));
+  }
+
+  private User createTestUser(Long id) {
+    User user = new User();
+    user.setId(id);
+    return user;
+  }
+
+  private Event createTestEvent(Long id, String name) {
+    Event event = new Event();
+    event.setId(id);
+    event.setName(name);
+    return event;
+  }
+
+  private Event createTestEvent(Long id, String name, LocalDate date) {
+    Event event = createTestEvent(id, name);
+    event.setDate(date);
+    return event;
   }
 }
