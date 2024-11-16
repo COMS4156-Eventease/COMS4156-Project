@@ -16,7 +16,8 @@ public interface RSVPRepository extends JpaRepository<RSVP, RSVPKey> {
   Optional<RSVP> findByUserAndEvent(User user, Event event);
 
   List<RSVP> findByEvent(Event event);
+  
+  List<RSVP> findAllByUserOrderByEventDate(User user);
 
-  int countByEvent(Event event);
-
+  List<RSVP> findAllByUserAndStatusOrderByEventDate(User user, String status);
 }

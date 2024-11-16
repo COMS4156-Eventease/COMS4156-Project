@@ -117,4 +117,20 @@ public class RSVPService {
     event.setAttendanceCount(event.getAttendanceCount() + 1);
     eventService.saveEvent(event);
   }
+
+  public List<RSVP> getAllRSVPsByUser(String userId) {
+    User user = userService.findUserById(Long.parseLong(userId));
+    if (user == null) {
+      throw new UserNotExistException("User does not exist.");
+    }
+    return rsvpRepository.findAllByUserOrderByEventDate(user);
+  }
+
+  public List<RSVP> getCheckedInRSVPsByUser(String userId) {
+    User user = userService.findUserById(Long.parseLong(userId));
+    if (user == null) {
+      throw new UserNotExistException("User does not exist.");
+    }
+    return rsvpRepository.findAllByUserAndStatusOrderByEventDate(user, "CheckedIn");
+  }
 }
