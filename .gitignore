@@ -34,3 +34,7 @@ build/
 
 ### GCP ###
 app.yaml
+
+/.env
+
+/src/main/resources/application.properties

@@ -2,6 +2,7 @@ package com.eventease.eventease_service.unit_test.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -24,7 +25,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.multipart.MultipartFile;
 
 @WebMvcTest(EventController.class)
 public class EventControllerUnitTest {
@@ -48,26 +51,56 @@ public class EventControllerUnitTest {
     organizer.setId(1L);
 
     Event event = new Event();
-    event.setId(123L);
+    event.setId(123L);  // Set the expected event ID
     event.setName("Event Title");
 
+    // Mock the behavior of userService.findUserById
     when(userService.findUserById(1L)).thenReturn(organizer);
-    doNothing().when(eventService).add(any(Event.class));
 
-    mockMvc.perform(post("/api/events?organizerId=1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"name\": \"Event Title\", \"description\": \"Event description\", \"location\": \"123 Venue St.\", \"date\": \"2024-11-15\", \"time\": \"10:30\", \"capacity\": 100, \"budget\": 1200 }"))
+    // Use an Answer to set eventId when eventService.add is called
+    doAnswer(invocation -> {
+      Event e = invocation.getArgument(0);
+      e.setId(123L); // Set event ID to simulate the generated ID after saving
+      return null;
+    }).when(eventService).add(any(Event.class), any(MultipartFile[].class));
+
+    MockMultipartFile image = new MockMultipartFile("images", "test-image.jpg", MediaType.IMAGE_JPEG_VALUE, "Test Image Content".getBytes());
+
+    mockMvc.perform(multipart("/api/events")
+            .file(image)
+            .param("organizerId", "1")
+            .param("name", "Event Title")
+            .param("description", "Event description")
+            .param("location", "123 Venue St.")
+            .param("date", "2024-11-15")
+            .param("time", "10:30")
+            .param("capacity", "100")
+            .param("budget", "1200")
+            .contentType(MediaType.MULTIPART_FORM_DATA))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.organizerId").value(1));
+        .andExpect(jsonPath("$.organizerId").value(1))
+        .andExpect(jsonPath("$.eventId").value(123));
   }
 
   @Test
   public void addEventFailTest() throws Exception {
+    // Mock the behavior to throw a UserNotExistException when looking for organizer with ID 1
     when(userService.findUserById(1L)).thenThrow(new UserNotExistException("User is not found"));
 
-    mockMvc.perform(post("/api/events?organizerId=1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"name\": \"Event Title\", \"description\": \"Event description\", \"location\": \"123 Venue St.\", \"date\": \"2024-11-15\", \"time\": \"10:30\", \"capacity\": 100, \"budget\": 1200 }"))
+    // Dummy image file as the 'images' parameter
+    MockMultipartFile image = new MockMultipartFile("images", "dummy-image.jpg", MediaType.IMAGE_JPEG_VALUE, "Dummy Image Content".getBytes());
+
+    mockMvc.perform(multipart("/api/events")
+            .file(image)  // Provide the images part even for failure test
+            .param("organizerId", "1")
+            .param("name", "Event Title")
+            .param("description", "Event description")
+            .param("location", "123 Venue St.")
+            .param("date", "2024-11-15")
+            .param("time", "10:30")
+            .param("capacity", "100")
+            .param("budget", "1200")
+            .contentType(MediaType.MULTIPART_FORM_DATA))
         .andExpect(status().isNotFound())
         .andExpect(content().string("Organizer not found"));
   }
@@ -135,15 +168,17 @@ public class EventControllerUnitTest {
     existingEvent.setId(123L);
     existingEvent.setName("Old Event");
 
-    Event updatedEvent = new Event();
-    updatedEvent.setName("Updated Event");
-
     when(eventService.findById(123L)).thenReturn(existingEvent);
-    doNothing().when(eventService).updateEvent(eq(123L), any(Event.class));
+    doNothing().when(eventService).updateEvent(eq(123L), any(Event.class), any(MultipartFile[].class));
 
-    mockMvc.perform(patch("/api/events/123")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"name\": \"Updated Event\", \"capacity\": 200 }"))
+    MockMultipartFile image = new MockMultipartFile("images", "updated-image.jpg", MediaType.IMAGE_JPEG_VALUE, "Updated Image Content".getBytes());
+
+    mockMvc.perform(multipart("/api/events/123")
+            .file(image)
+            .param("name", "Updated Event")
+            .param("capacity", "200")
+            .with(request -> { request.setMethod("PATCH"); return request; })  // Set method to PATCH
+            .contentType(MediaType.MULTIPART_FORM_DATA))
         .andExpect(status().isOk())
         .andExpect(content().string("Event updated successfully"));
   }
@@ -154,8 +189,9 @@ public class EventControllerUnitTest {
     when(eventService.findById(123L)).thenThrow(new EventNotExistException("Event not found"));
 
     mockMvc.perform(patch("/api/events/123")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"name\": \"Updated Event\", \"capacity\": 200 }"))
+            .param("name", "Updated Event")
+            .param("capacity", "200")
+            .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound())
         .andExpect(content().string("Event not found"));
   }
