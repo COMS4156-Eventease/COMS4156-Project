@@ -77,5 +77,8 @@ public class EventService {
     // Delete the event by its ID
     eventRepository.deleteById(id);
   }
+
+  public void saveEvent(Event event) {
+  }
 }
 
