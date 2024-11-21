@@ -48,6 +48,8 @@ public class Event implements Serializable {
   private LocalTime time;
   private int capacity;
   private int budget;
+  private int rsvpCount = 0;
+  private int attendanceCount = 0;
 
   // Many-to-One relationship to represent the host (creator) of the event
   @ManyToOne
@@ -163,6 +165,7 @@ public class Event implements Serializable {
     this.participants = participants;
   }
 
+
   public List<EventImage> getImages() {
     return images;
   }
@@ -170,6 +173,22 @@ public class Event implements Serializable {
   public Event setImages(List<EventImage> images) {
     this.images = images;
     return this;
+  }
+  
+  public void setRsvpCount(int rsvpCount){
+    this.rsvpCount = rsvpCount;
+  }
+
+  public int getRsvpCount(){
+    return this.rsvpCount;
+  }
+
+  public void setAttendanceCount(int attendanceCount){
+    this.attendanceCount = attendanceCount;
+  }
+
+  public int getAttendanceCount(){
+    return this.attendanceCount;
   }
 
   // Add a participant to the event
