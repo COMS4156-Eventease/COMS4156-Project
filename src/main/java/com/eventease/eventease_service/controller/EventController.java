@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -141,8 +140,11 @@ public class EventController {
       @RequestParam(value = "images", required = false) MultipartFile[] images
   ) {
     try {
-      // Fetch the existing event
+
       Event existingEvent = eventService.findById(eventId);
+      if (existingEvent == null) {
+        return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
+      }
 
       // Create a new Event object to hold updates
       Event updatedEvent = new Event.Builder()
