@@ -2,6 +2,7 @@ package com.eventease.eventease_service.unit_test.controller;
 
 import com.eventease.eventease_service.controller.TaskController;
 import com.eventease.eventease_service.exception.*;
+import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.Task;
 import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.service.EventService;
@@ -18,6 +19,8 @@ import org.springframework.http.ResponseEntity;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -55,18 +58,35 @@ class TaskControllerUnitTest {
     void createTask_Success() throws Exception {
         Long eventId = 1L;
         Long userId = 1L;
-        Task task = new Task();
-        Map<String, Object> request = new HashMap<>();
-        request.put("task", task);
 
-        when(taskService.createTask(eq(eventId), eq(userId), any(Task.class))).thenReturn(task);
+        Map<String, Object> taskDetails = new HashMap<>();
+        taskDetails.put("name", "Test Task");
+        taskDetails.put("description", "Test Description");
+        taskDetails.put("status", "PENDING");
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("task", taskDetails);
+
+        Task responseTask = new Task();
+        responseTask.setId(1L);
+        responseTask.setName("Test Task");
+        responseTask.setDescription("Test Description");
+        responseTask.setStatus(Task.TaskStatus.PENDING);
+
+        Event mockEvent = new Event();
+        User mockUser = new User();
+        when(eventService.findById(eventId)).thenReturn(mockEvent);
+        when(userService.findUserById(userId)).thenReturn(mockUser);
+        when(taskService.createTask(eq(eventId), eq(userId), any(Task.class)))
+                .thenReturn(responseTask);
 
         ResponseEntity<Map<String, Object>> response = taskController.createTask(eventId, userId, request);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         Map<String, Object> responseBody = response.getBody();
+        assertNotNull(responseBody);
         assertTrue((Boolean) responseBody.get("success"));
-        assertEquals(Collections.singletonList(task), responseBody.get("data"));
+        assertEquals(Collections.singletonList(responseTask), responseBody.get("data"));
     }
 
     /**
@@ -78,18 +98,25 @@ class TaskControllerUnitTest {
     void createTask_EventNotFound() throws Exception {
         Long eventId = 1L;
         Long userId = 1L;
-        Map<String, Object> request = new HashMap<>();
-        request.put("task", new Task());
 
-        when(taskService.createTask(eq(eventId), eq(userId), any(Task.class)))
-                .thenThrow(new EventNotExistException("Event not found"));
+        Map<String, Object> taskDetails = new HashMap<>();
+        taskDetails.put("name", "Test Task");
+        taskDetails.put("description", "Test Description");
+        taskDetails.put("status", "PENDING");
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("task", taskDetails);
+
+        when(eventService.findById(eventId))
+            .thenThrow(new EventNotExistException("Event not found"));
 
         ResponseEntity<Map<String, Object>> response = taskController.createTask(eventId, userId, request);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         Map<String, Object> responseBody = response.getBody();
+        assertNotNull(responseBody);
         assertFalse((Boolean) responseBody.get("success"));
-        assertEquals(null, responseBody.get("data"));
+        assertNull(responseBody.get("data"));
         assertEquals("Event not found", responseBody.get("message"));
     }
 
@@ -142,16 +169,37 @@ class TaskControllerUnitTest {
     @Test
     void getTask_Success() throws Exception {
         Long taskId = 1L;
-        Task task = new Task();
 
-        when(taskService.getTaskById(taskId)).thenReturn(task);
+        Event mockEvent = new Event();
+        mockEvent.setId(1L);
+
+        User mockUser = new User();
+        mockUser.setId(1L);
+
+        Task mockTask = new Task();
+        mockTask.setId(taskId);
+        mockTask.setName("Test Task");
+        mockTask.setDescription("Test Description");
+        mockTask.setStatus(Task.TaskStatus.PENDING);
+        mockTask.setEvent(mockEvent);
+        mockTask.setAssignedUser(mockUser);
+
+        when(taskService.getTaskById(taskId)).thenReturn(mockTask);
 
         ResponseEntity<Map<String, Object>> response = taskController.getTask(taskId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Map<String, Object> responseBody = response.getBody();
+        assertNotNull(responseBody);
         assertTrue((Boolean) responseBody.get("success"));
-        assertEquals(task, responseBody.get("data"));
+
+        Map<String, Object> taskData = (Map<String, Object>) responseBody.get("data");
+        assertEquals(taskId, taskData.get("id"));
+        assertEquals("Test Task", taskData.get("name"));
+        assertEquals("Test Description", taskData.get("description"));
+        assertEquals(Task.TaskStatus.PENDING, taskData.get("status"));
+        assertEquals(1L, taskData.get("eventId"));
+        assertEquals(1L, taskData.get("assignedUserId"));
     }
     /**
      * Tests the case where the task ID being retrieved does not exist.
