@@ -141,8 +141,11 @@ public class EventController {
       @RequestParam(value = "images", required = false) MultipartFile[] images
   ) {
     try {
-      // Fetch the existing event
+
       Event existingEvent = eventService.findById(eventId);
+      if (existingEvent == null) {
+        return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
+      }
 
       // Create a new Event object to hold updates
       Event updatedEvent = new Event.Builder()

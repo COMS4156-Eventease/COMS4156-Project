@@ -77,7 +77,7 @@ public class User implements Serializable {
   )
   private Set<Event> attendedEvents = new HashSet<>();
 
-  public User() {};
+  public User() {}
 
   public User(Builder builder) {
     this.id = builder.id;
