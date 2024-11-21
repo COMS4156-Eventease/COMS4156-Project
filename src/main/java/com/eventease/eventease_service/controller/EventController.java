@@ -7,7 +7,6 @@ import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.service.EventService;
 import com.eventease.eventease_service.service.UserService;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,7 +115,7 @@ public class EventController {
       @RequestBody Event updatedEvent) {
 
     try {
-      Event existingEvent = eventService.findById(eventId);
+      eventService.findById(eventId);
 //      if (existingEvent == null) {
 //        return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
 //      }

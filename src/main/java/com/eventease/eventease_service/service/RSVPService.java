@@ -1,17 +1,12 @@
 package com.eventease.eventease_service.service;
 
-import com.eventease.eventease_service.exception.RSVPExistsException;
-import com.eventease.eventease_service.exception.RSVPNotExistException;
+import com.eventease.eventease_service.exception.*;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.RSVP;
 import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.repository.RSVPRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Map;
@@ -32,12 +27,20 @@ public class RSVPService {
   public RSVP createRSVP(String eventId, String userId, RSVP rsvp) {
     Event event = eventService.findById(Long.parseLong(eventId));
     User user = userService.findUserById(Long.parseLong(userId));
+
+    // check if the event is full;
+    if (event.getRsvpCount() >= event.getCapacity()) {
+      throw new EventFullException("Event is already at full capacity");
+    }
+
+    // check duplicate RSVP
     Optional<RSVP> rsvpCheck= rsvpRepository.findByUserAndEvent(user, event);
     if(rsvpCheck.isPresent()) {
-      throw (new RSVPExistsException("RSVP Already Exists"));
+      throw new RSVPExistsException("RSVP Already Exists");
     }
     rsvp.setEvent(event);
     rsvp.setUser(user);
+    event.setRsvpCount(event.getRsvpCount() + 1);
     return rsvpRepository.save(rsvp);
   }
 
@@ -55,6 +58,7 @@ public class RSVPService {
     if (optionalRSVP.isPresent()) {
       RSVP rsvp = optionalRSVP.get();
       rsvpRepository.delete(rsvp);
+      event.setRsvpCount(event.getRsvpCount() - 1);
     } else {
       throw new RSVPNotExistException("RSVP not found");
     }
@@ -66,7 +70,7 @@ public class RSVPService {
     User user = userService.findUserById(Long.parseLong(userId));
 
     Optional<RSVP> optionalRSVP = rsvpRepository.findByUserAndEvent(user, event);
-    if (!optionalRSVP.isPresent()) {
+    if (optionalRSVP.isEmpty()) {
       throw new RSVPNotExistException("RSVP does not exist for this event and user");
     }
 
@@ -86,5 +90,47 @@ public class RSVPService {
     }
 
     return rsvpRepository.save(rsvp);
+  }
+
+  public void checkInUser(String eventId, String userId) {
+    Event event = eventService.findById(Long.parseLong(eventId));
+    if (event == null) {
+      throw new EventNotExistException("Event does not exist.");
+    }
+
+    User user = userService.findUserById(Long.parseLong(userId));
+    if(user == null) {
+      throw new UserNotExistException("User does not exist.");
+    }
+
+    RSVP rsvp = rsvpRepository.findByUserAndEvent(user, event)
+            .orElseThrow(() -> new RSVPNotExistException("No RSVP found for this user at the event."));
+
+    // Check if the user is already checked in
+    if (rsvp.getStatus().equals("CheckedIn")) {
+      throw new IllegalArgumentException("User has already been checked in.");
+    }
+
+    rsvp.setStatus("CheckedIn");
+    rsvpRepository.save(rsvp);
+
+    event.setAttendanceCount(event.getAttendanceCount() + 1);
+    eventService.saveEvent(event);
+  }
+
+  public List<RSVP> getAllRSVPsByUser(String userId) {
+    User user = userService.findUserById(Long.parseLong(userId));
+    if (user == null) {
+      throw new UserNotExistException("User does not exist.");
+    }
+    return rsvpRepository.findAllByUserOrderByEventDate(user);
+  }
+
+  public List<RSVP> getCheckedInRSVPsByUser(String userId) {
+    User user = userService.findUserById(Long.parseLong(userId));
+    if (user == null) {
+      throw new UserNotExistException("User does not exist.");
+    }
+    return rsvpRepository.findAllByUserAndStatusOrderByEventDate(user, "CheckedIn");
   }
 }
