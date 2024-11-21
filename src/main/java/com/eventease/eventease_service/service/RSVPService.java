@@ -7,11 +7,7 @@ import com.eventease.eventease_service.model.RSVP;
 import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.repository.RSVPRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Map;
@@ -34,7 +30,7 @@ public class RSVPService {
     User user = userService.findUserById(Long.parseLong(userId));
     Optional<RSVP> rsvpCheck= rsvpRepository.findByUserAndEvent(user, event);
     if(rsvpCheck.isPresent()) {
-      throw (new RSVPExistsException("RSVP Already Exists"));
+      throw new RSVPExistsException("RSVP Already Exists");
     }
     rsvp.setEvent(event);
     rsvp.setUser(user);
