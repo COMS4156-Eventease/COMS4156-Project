@@ -256,7 +256,52 @@ Here is documentation for all the HTTP endpoints exposed by this application:
   * HTTP 404 Status Code is returned if the event/user/rsvp is not found.
   * HTTP 500 Internal Server Error for other issues
 
+##### PATCH /api/events/{eventId}/rsvp/{userId}
+* Partially updates an RSVP for a user to a specified event.
+* Expected Path Variables:
+  * eventId (String)
+  * userId (String)
+* Expected Request Body: JSON object with fields to update in the RSVP.
+* Expected Output: Success Message (String) with updated RSVP details.
+* Upon Success:
+  * 200 OK with the updated RSVP details.
+* Upon Failure:
+  * HTTP 404 Status Code is returned if the event, user, or RSVP is not found.
+  * HTTP 500 Internal Server Error for other issues.
 
+##### POST /api/events/{eventId}/rsvp/checkin/{userId}
+* Checks in a user to a specified event.
+* Expected Path Variables:
+  * eventId (String)
+  * userId (String)
+* Expected Output: Success Message (String).
+* Upon Success:
+  * 200 OK with a message indicating successful check-in.
+* Upon Failure:
+  * HTTP 404 Status Code is returned if the event, user, or RSVP is not found.
+  * HTTP 500 Internal Server Error for other issues.
+
+##### GET /api/events/rsvp/user/{userId}
+* Retrieves all RSVPs for a specific user.
+* Expected Path Variables:
+  * userId (String)
+* Expected Output: List of RSVP objects (JSON).
+* Upon Success:
+  * 200 OK with a list of RSVPs for the specified user.
+* Upon Failure:
+  * HTTP 404 Status Code is returned if the user is not found.
+  * HTTP 500 Internal Server Error for other issues.
+
+##### GET /api/events/rsvp/user/{userId}/checkedin
+* Retrieves all checked-in RSVPs for a specific user.
+* Expected Path Variables:
+  * userId (String)
+* Expected Output: List of checked-in RSVP objects (JSON).
+* Upon Success:
+  * 200 OK with a list of checked-in RSVPs for the specified user.
+* Upon Failure:
+  * HTTP 404 Status Code is returned if the user is not found.
+  * HTTP 500 Internal Server Error for other issues.
 
 #### Task Management
 ##### POST /api/events/{eventId}/tasks

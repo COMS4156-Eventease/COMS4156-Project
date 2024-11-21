@@ -142,6 +142,7 @@ public class EventController {
   ) {
     try {
 
+
       Event existingEvent = eventService.findById(eventId);
       if (existingEvent == null) {
         return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
@@ -162,6 +163,7 @@ public class EventController {
 
       // Pass updatedEvent and images to the eventService for saving
       eventService.updateEvent(eventId, updatedEvent, images);
+
 
       return new ResponseEntity<>("Event updated successfully", HttpStatus.OK);
     } catch (EventNotExistException e) {

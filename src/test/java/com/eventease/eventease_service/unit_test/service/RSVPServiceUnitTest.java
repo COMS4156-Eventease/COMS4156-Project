@@ -46,6 +46,7 @@ public class RSVPServiceUnitTest {
     String eventId = "1";
     String userId = "1";
     Event event = new Event();
+    event.setCapacity(1);
     User user = new User();
     RSVP rsvp = new RSVP();
 
@@ -67,6 +68,7 @@ public class RSVPServiceUnitTest {
     String eventId = "1";
     String userId = "1";
     Event event = new Event();
+    event.setCapacity(1);
     User user = new User();
     RSVP rsvp = new RSVP();
 
