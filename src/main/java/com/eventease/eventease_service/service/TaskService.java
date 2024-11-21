@@ -1,6 +1,5 @@
 package com.eventease.eventease_service.service;
 
-import com.eventease.eventease_service.exception.EventNotExistException;
 import com.eventease.eventease_service.exception.TaskNotExistException;
 import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.Task;
@@ -109,7 +108,7 @@ public class TaskService {
      * @return a list of tasks assigned to the user
      */
     public List<Task> getTasksByUser(Long userId) {
-        User user = userService.findUserById(userId);
+        userService.findUserById(userId);
         
         return taskRepository.findByAssignedUserId(userId);
     }

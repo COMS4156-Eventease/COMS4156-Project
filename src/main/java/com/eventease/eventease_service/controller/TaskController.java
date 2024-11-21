@@ -12,8 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -107,8 +105,7 @@ public class TaskController {
                 response.put("message", "Invalid event ID. Event ID must be a positive number.");
                 return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
             }
-
-            Event event = eventService.findById(eventId);
+            eventService.findById(eventId);
             
             List<Task> tasks = taskService.getTasksByEvent(eventId);
             response.put("success", true);
