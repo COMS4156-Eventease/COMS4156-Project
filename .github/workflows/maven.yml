@@ -32,6 +32,9 @@ jobs:
           --health-timeout=5s
           --health-retries=5
 
+    env:
+      GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -69,3 +72,12 @@ jobs:
 
       - name: Run checkstyle
         run: mvn checkstyle:check
+
+      - name: Run PMD
+        run: mvn pmd:check
+
+      - name: Upload PMD report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pmd-report
+          path: ./target/pmd.xml

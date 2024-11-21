@@ -15,9 +15,10 @@ public class GoogleCloudStorageConfig {
   @Bean
   public Storage storage() throws IOException {
     // Load environment variables from .env file
-    Dotenv dotenv = Dotenv.configure().load();
-    String credentialsJson = dotenv.get("GCP_CREDENTIALS");
-
+    //
+//    Dotenv dotenv = Dotenv.configure().load();
+//    String credentialsJson = dotenv.get("GCP_CREDENTIALS");
+    String credentialsJson = System.getenv("GCP_CREDENTIALS");
     if (credentialsJson == null || credentialsJson.isEmpty()) {
       throw new IllegalStateException("Environment variable GCP_CREDENTIALS is not set or empty.");
     }
