@@ -1,9 +1,12 @@
 package com.eventease.eventease_service.controller;
 
 import com.eventease.eventease_service.exception.*;
+import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.Task;
+import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.service.TaskService;
 import com.eventease.eventease_service.service.UserService;
+import com.eventease.eventease_service.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,27 +33,68 @@ public class TaskController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private EventService eventService;
+
     @PostMapping
     public ResponseEntity<Map<String, Object>> createTask(@RequestParam Long eventId,
                                                           @RequestParam Long userId,
-                                                          @Valid @RequestBody Map<String, Object> request) {
+                                                          @RequestBody Map<String, Object> request) {
         Map<String, Object> response = new HashMap<>();
         try {
-            Task task = (Task) request.get("task");
+            if (!request.containsKey("task")) {
+                throw new IllegalArgumentException("Request must contain a 'task' object");
+            }
+
+            Object taskObj = request.get("task");
+            if (!(taskObj instanceof Map)) {
+                throw new IllegalArgumentException("Task must be a valid object");
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> taskMap = (Map<String, Object>) taskObj;
+
+            if (!taskMap.containsKey("name") || taskMap.get("name") == null ||
+                    taskMap.get("name").toString().trim().isEmpty()) {
+                throw new IllegalArgumentException("Task name is required");
+            }
+
+            Event event = eventService.findById(eventId);
+            User assignedUser = userService.findUserById(userId);
+
+            Task task = new Task();
+            task.setName(taskMap.get("name").toString().trim());
+            task.setDescription(taskMap.get("description") != null
+                    ? taskMap.get("description").toString()
+                    : "");
+
+            // Handle status - default to PENDING if not provided
+            String statusStr = taskMap.get("status") != null
+                    ? taskMap.get("status").toString().toUpperCase()
+                    : "PENDING";
+            try {
+                task.setStatus(Task.TaskStatus.valueOf(statusStr));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid task status: " + statusStr);
+            }
+
+            task.setEvent(event);
+            task.setAssignedUser(assignedUser);
+
             Task createdTask = taskService.createTask(eventId, userId, task);
+
             response.put("success", true);
             response.put("data", Collections.singletonList(createdTask));
             return new ResponseEntity<>(response, HttpStatus.CREATED);
-        } catch (TaskNotExistException | EventNotExistException e) {
+
+        } catch (EventNotExistException | UserNotExistException e) {
             response.put("success", false);
-            response.put("data", null);
             response.put("message", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             response.put("success", false);
-            response.put("data", null);
-            response.put("message", "Error creating task: " + e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -58,6 +102,14 @@ public class TaskController {
     public ResponseEntity<Map<String, Object>> getTasksByEvent(@PathVariable Long eventId) {
         Map<String, Object> response = new HashMap<>();
         try {
+            if (eventId == null || eventId <= 0) {
+                response.put("success", false);
+                response.put("message", "Invalid event ID. Event ID must be a positive number.");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
+            Event event = eventService.findById(eventId);
+            
             List<Task> tasks = taskService.getTasksByEvent(eventId);
             response.put("success", true);
             response.put("data", tasks);
@@ -80,14 +132,28 @@ public class TaskController {
         Map<String, Object> response = new HashMap<>();
         try {
             Task task = taskService.getTaskById(taskId);
+
+            Map<String, Object> taskData = new HashMap<>();
+            taskData.put("id", task.getId());
+            taskData.put("name", task.getName());
+            taskData.put("description", task.getDescription());
+            taskData.put("status", task.getStatus());
+
+            taskData.put("eventId", task.getEvent().getId());
+            taskData.put("assignedUserId", task.getAssignedUser().getId());
+
             response.put("success", true);
-            response.put("data", task);
+            response.put("data", taskData);
             return new ResponseEntity<>(response, HttpStatus.OK);
+
         } catch (TaskNotExistException e) {
             response.put("success", false);
-            response.put("data", null);
             response.put("message", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error retrieving task: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

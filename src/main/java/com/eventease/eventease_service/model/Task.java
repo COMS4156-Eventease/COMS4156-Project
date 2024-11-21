@@ -49,7 +49,7 @@ public class Task implements Serializable {
     @NotNull(message = "Assigned user is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_user_id", nullable = false)
-    @JsonIgnore
+    @JsonProperty("userID")
     private User assignedUser;
 
     public Task() {}
