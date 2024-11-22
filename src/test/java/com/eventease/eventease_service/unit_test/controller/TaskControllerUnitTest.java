@@ -14,16 +14,20 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for the TaskController class.
  * The class uses JUnit and Mockito to test different scenarios in TaskController's methods.
  */
+@ActiveProfiles("test")
 class TaskControllerUnitTest {
 
     @Mock

@@ -185,6 +185,7 @@ public class EventController {
   ) {
     Map<String, Object> response = new HashMap<>();
     try {
+
       Event existingEvent = eventService.findById(eventId);
 
       Event updatedEvent = new Event.Builder()

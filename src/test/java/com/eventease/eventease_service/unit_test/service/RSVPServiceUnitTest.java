@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ActiveProfiles("test")
 public class RSVPServiceUnitTest {
 
   @Mock
@@ -46,6 +48,7 @@ public class RSVPServiceUnitTest {
     String eventId = "1";
     String userId = "1";
     Event event = new Event();
+    event.setCapacity(1);
     User user = new User();
     RSVP rsvp = new RSVP();
 
@@ -67,6 +70,7 @@ public class RSVPServiceUnitTest {
     String eventId = "1";
     String userId = "1";
     Event event = new Event();
+    event.setCapacity(1);
     User user = new User();
     RSVP rsvp = new RSVP();
 
