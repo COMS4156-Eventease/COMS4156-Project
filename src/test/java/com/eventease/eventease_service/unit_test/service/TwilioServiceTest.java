@@ -26,7 +26,7 @@ class TwilioServiceTest {
     private MockedStatic<Message> messageMock;
     private TwilioService twilioService;
 
-    private static final String VALID_TWILIO_NUMBER = "+15555555555"; 
+    private static final String VALID_TWILIO_NUMBER = "+15555555555";
     private static final String VALID_RECIPIENT_NUMBER = "+14155555555";
     private static final String TEST_MESSAGE = "Test message";
     private static final String TEST_ACCOUNT_SID = "TEST_ACCOUNT_SID";
