@@ -39,7 +39,6 @@ public class EmailConfig {
         mailSender.setUsername(mailUsername);
         mailSender.setPassword(mailPassword);
 
-        // Set additional properties
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
@@ -47,21 +46,8 @@ public class EmailConfig {
         props.put("mail.smtp.starttls.required", "true");
         props.put("mail.smtp.timeout", "5000");
         props.put("mail.smtp.connectiontimeout", "5000");
-        props.put("mail.debug", "true"); // Enable for debugging, disable in production
+        props.put("mail.debug", "true");
 
         return mailSender;
-    }
-
-    public boolean verifyEmailConfig() {
-        try {
-            JavaMailSenderImpl mailSender = (JavaMailSenderImpl) getJavaMailSender();
-            logger.info("Testing email connection...");
-            mailSender.testConnection();
-            logger.info("Email connection test successful");
-            return true;
-        } catch (Exception e) {
-            logger.error("Email connection test failed: {}", e.getMessage());
-            return false;
-        }
     }
 }
