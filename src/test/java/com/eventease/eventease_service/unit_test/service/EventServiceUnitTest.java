@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.*;
  * Unit tests for the EventService class.
  * These tests cover various scenarios to ensure the correct functioning of the EventService methods.
  */
+@ActiveProfiles("test")
 public class EventServiceUnitTest {
 
   @Mock
