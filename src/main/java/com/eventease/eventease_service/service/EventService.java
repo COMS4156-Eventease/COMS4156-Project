@@ -2,27 +2,42 @@ package com.eventease.eventease_service.service;
 
 import com.eventease.eventease_service.exception.EventNotExistException;
 import com.eventease.eventease_service.model.Event;
+import com.eventease.eventease_service.model.EventImage;
 import com.eventease.eventease_service.repository.EventRepository;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class EventService {
 
   private final EventRepository eventRepository;
+  private final ImageStorageService imageStorageService;
 
   // @Autowired is used to inject dependencies automatically by Spring
   @Autowired
-  public EventService(EventRepository eventRepository) {
+  public EventService(EventRepository eventRepository, ImageStorageService imageStorageService) {
     this.eventRepository = eventRepository;
+    this.imageStorageService = imageStorageService;
   }
 
   // Saves a new event to the database
-  public void add(Event event) {
+  public void add(Event event, MultipartFile[] images) {
+    List<String> mediaLinks = Arrays.stream(images).parallel().map(image -> imageStorageService.save(image)).collect(
+        Collectors.toList());
+    List<EventImage> eventImages = new ArrayList<>();
+    for (String mediaLink : mediaLinks) {
+      eventImages.add(new EventImage(mediaLink, event));
+    }
+    event.setImages(eventImages);
+
     eventRepository.save(event);
   }
 
@@ -43,13 +58,13 @@ public class EventService {
   }
 
   // Updates an existing event using the Builder pattern to ensure immutability
-  public void updateEvent(long id, Event updatedEvent) {
+  public void updateEvent(long id, Event updatedEvent, MultipartFile[] images) {
     Event existingEvent = eventRepository.findById(id);
     if (existingEvent == null) {
       throw new EventNotExistException("Event not found");
     }
 
-    // Update fields of the existing event in place
+    // Update fields of the existing event
     existingEvent.setName(updatedEvent.getName() != null ? updatedEvent.getName() : existingEvent.getName());
     existingEvent.setDescription(updatedEvent.getDescription() != null ? updatedEvent.getDescription() : existingEvent.getDescription());
     existingEvent.setLocation(updatedEvent.getLocation() != null ? updatedEvent.getLocation() : existingEvent.getLocation());
@@ -57,9 +72,25 @@ public class EventService {
     existingEvent.setTime(updatedEvent.getTime() != null ? updatedEvent.getTime() : existingEvent.getTime());
     existingEvent.setCapacity(updatedEvent.getCapacity() > 0 ? updatedEvent.getCapacity() : existingEvent.getCapacity());
     existingEvent.setBudget(updatedEvent.getBudget() > 0 ? updatedEvent.getBudget() : existingEvent.getBudget());
-    // Retain the original host and participants
-    existingEvent.setHost(existingEvent.getHost());
-    existingEvent.setParticipants(existingEvent.getParticipants());
+    existingEvent.setHost(existingEvent.getHost()); // Retain original host
+    existingEvent.setParticipants(existingEvent.getParticipants()); // Retain original participants
+
+    if (images != null && images.length > 0) {
+      // Clear existing images
+      existingEvent.getImages().clear();
+
+      // Save the new images
+      List<String> mediaLinks = Arrays.stream(images)
+          .parallel()
+          .map(imageStorageService::save)
+          .collect(Collectors.toList());
+
+      List<EventImage> eventImages = mediaLinks.stream()
+          .map(mediaLink -> new EventImage(mediaLink, existingEvent))
+          .collect(Collectors.toList());
+
+      existingEvent.getImages().addAll(eventImages);
+    }
 
     // Save the updated event back to the repository
     eventRepository.save(existingEvent);
@@ -78,7 +109,12 @@ public class EventService {
     eventRepository.deleteById(id);
   }
 
+  public List<Event> findAllEvents() {
+    return eventRepository.findAll();
+  }
+  
   public void saveEvent(Event event) {
   }
+
 }
 

@@ -32,6 +32,9 @@ jobs:
           --health-timeout=5s
           --health-retries=5
 
+    env:
+      GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+
     steps:
       - uses: actions/checkout@v4
 
