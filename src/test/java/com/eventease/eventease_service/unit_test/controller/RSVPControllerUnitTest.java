@@ -28,8 +28,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-@ActiveProfiles("test")
 @SpringBootTest
+@ActiveProfiles("test")
 public class RSVPControllerUnitTest {
   @InjectMocks
   RSVPController rsvpController;
