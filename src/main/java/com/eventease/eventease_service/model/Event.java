@@ -3,7 +3,9 @@ package com.eventease.eventease_service.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -11,12 +13,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -61,6 +66,9 @@ public class Event implements Serializable {
   )
   private Set<User> participants = new HashSet<User>();
 
+  @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+  private List<EventImage> images;
+
   public Event() {
 
   }
@@ -74,6 +82,7 @@ public class Event implements Serializable {
     this.host = builder.host;
     this.capacity = builder.capacity;
     this.budget = builder.budget;
+    this.images = builder.images;
   }
 
   public Long getId() {
@@ -156,6 +165,15 @@ public class Event implements Serializable {
     this.participants = participants;
   }
 
+  public List<EventImage> getImages() {
+    return images;
+  }
+
+  public Event setImages(List<EventImage> images) {
+    this.images = images;
+    return this;
+  }
+  
   public void setRsvpCount(int rsvpCount){
     this.rsvpCount = rsvpCount;
   }
@@ -213,6 +231,9 @@ public class Event implements Serializable {
     @JsonProperty("participants")
     private Set<User> participants = new HashSet<User>();
 
+    @JsonProperty("images")
+    private List<EventImage> images = new ArrayList<EventImage>();
+
     public Builder setId(Long id) {
       this.id = id;
       return this;
@@ -260,6 +281,11 @@ public class Event implements Serializable {
 
     public Builder setParticipants(Set<User> participants) {
       this.participants = participants;
+      return this;
+    }
+
+    public Builder setImages(List<EventImage> images) {
+      this.images = images;
       return this;
     }
 
