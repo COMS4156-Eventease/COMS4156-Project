@@ -112,6 +112,9 @@ public class EventService {
   public List<Event> findAllEvents() {
     return eventRepository.findAll();
   }
+  
+  public void saveEvent(Event event) {
+  }
 
 }
 
