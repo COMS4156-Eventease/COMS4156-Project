@@ -35,4 +35,5 @@ build/
 ### GCP ###
 app.yaml
 
-.env
+### Env Variable
+./.env
