@@ -1,12 +1,15 @@
 package com.eventease.eventease_service.controller;
 
 import com.eventease.eventease_service.exception.EventNotExistException;
+import com.eventease.eventease_service.exception.GCSUploadException;
 import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.service.EventService;
 import com.eventease.eventease_service.service.UserService;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,16 +22,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/events")
 public class EventController {
-  private EventService eventService;
-  private UserService userService;
+  private final EventService eventService;
+  private final UserService userService;
 
   @Autowired
   public EventController(EventService eventService, UserService userService) {
@@ -36,98 +39,183 @@ public class EventController {
     this.userService = userService;
   }
 
-  // Create a new event with details such as name, time, date, location, organizer, capacity, and budget.
   @PostMapping
-  public ResponseEntity<?> addEvent(
-      @RequestParam Long organizerId,
-      @RequestBody Event event
+  public ResponseEntity<Map<String, Object>> addEvent(
+      @RequestParam("organizerId") Long organizerId,
+      @RequestParam("name") String name,
+      @RequestParam("time") String time,
+      @RequestParam("date") String date,
+      @RequestParam("location") String location,
+      @RequestParam("description") String description,
+      @RequestParam("capacity") String capacity,
+      @RequestParam("budget") String budget,
+      @RequestParam("images") MultipartFile[] images
   ) {
+    Map<String, Object> response = new HashMap<>();
     try {
       User organizer = userService.findUserById(organizerId);
       if (organizer == null) {
-        return new ResponseEntity<>("Organizer not found", HttpStatus.NOT_FOUND);
+        response.put("success", false);
+        response.put("data", Collections.emptyList());
+        response.put("message", "Organizer not found");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
       }
 
-      event.setHost(organizer);
+      Event event = new Event.Builder()
+          .setName(name)
+          .setTime(LocalTime.parse(time))
+          .setDate(LocalDate.parse(date))
+          .setLocation(location)
+          .setDescription(description)
+          .setCapacity(Integer.parseInt(capacity))
+          .setBudget(Integer.parseInt(budget))
+          .setHost(organizer)
+          .build();
 
-      eventService.add(event);
+      eventService.add(event, images);
 
-      Map<String, Object> response = new HashMap<>();
-      response.put("organizerId", organizer.getId());
-      response.put("eventId", event.getId());
-
-      return new ResponseEntity<>(response, HttpStatus.CREATED);
+      response.put("success", true);
+      response.put("data", List.of(Map.of("organizerId", organizer.getId(), "eventId", event.getId())));
+      return ResponseEntity.status(HttpStatus.CREATED).body(response);
     } catch (UserNotExistException e) {
-      return new ResponseEntity<>("Organizer not found", HttpStatus.NOT_FOUND);
+      response.put("success", false);
+      response.put("data", Collections.emptyList());
+      response.put("message", "Organizer not found");
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    } catch (GCSUploadException e) {
+      response.put("success", false);
+      response.put("data", Collections.emptyList());
+      response.put("message", "GCP error");
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     } catch (Exception e) {
-      return new ResponseEntity<>("Error creating event: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+      response.put("success", false);
+      response.put("data", Collections.emptyList());
+      response.put("message", "Error creating event: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
   }
 
-  // Retrieve details of a specific event by its ID.
   @GetMapping(value = "/{eventId}")
-  public ResponseEntity<?> getEventById(@PathVariable Long eventId) {
+  public ResponseEntity<Map<String, Object>> getEventById(@PathVariable Long eventId) {
+    Map<String, Object> response = new HashMap<>();
     try {
-      // Retrieve the event by ID using the service
       Event event = eventService.findById(eventId);
-//      if (event == null) {
-//        return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
-//      }
-      // Return the event details if found
-      return new ResponseEntity<>(event, HttpStatus.OK);
+      response.put("success", true);
+      response.put("data", List.of(event));
+      return ResponseEntity.ok(response);
     } catch (EventNotExistException e) {
-      // If the event is not found
-      return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
+      response.put("success", false);
+      response.put("data", Collections.emptyList());
+      response.put("message", "Event not found");
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     } catch (Exception e) {
-      // Handle any other unexpected exceptions
-      return new ResponseEntity<>("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+      response.put("success", false);
+      response.put("data", Collections.emptyList());
+      response.put("message", "An unexpected error occurred");
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
   }
 
-  // Retrieve a list of events with optional filters (e.g., date range)
   @GetMapping
-  public ResponseEntity<List<Event>> getEvents(
-      @RequestParam(value = "startDate")
-      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-      @RequestParam(value = "endDate")
-      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-
-    List<Event> events = eventService.findByDateBetween(startDate, endDate);
-    return new ResponseEntity<>(events, HttpStatus.OK);
+  public ResponseEntity<Map<String, Object>> getEvents(
+      @RequestParam(value = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+      @RequestParam(value = "endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+  ) {
+    Map<String, Object> response = new HashMap<>();
+    try {
+      List<Event> events = eventService.findByDateBetween(startDate, endDate);
+      response.put("success", true);
+      response.put("data", events);
+      return ResponseEntity.ok(response);
+    } catch (Exception e) {
+      response.put("success", false);
+      response.put("data", Collections.emptyList());
+      response.put("message", "Error retrieving events: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
   }
 
-  // Delete a specific event.
+  @GetMapping("/all")
+  public ResponseEntity<Map<String, Object>> getAllEvents() {
+    Map<String, Object> response = new HashMap<>();
+    try {
+      // Retrieve all events using the eventService
+      List<Event> events = eventService.findAllEvents();
+
+      // Construct the success response
+      response.put("success", true);
+      response.put("data", events);
+      return ResponseEntity.ok(response);
+    } catch (Exception e) {
+      // Construct the failure response
+      response.put("success", false);
+      response.put("data", Collections.emptyList());
+      response.put("message", "Failed to fetch events: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+  }
+
   @DeleteMapping(value = "/{eventId}")
-  public ResponseEntity<?> deleteEventById(@PathVariable Long eventId) {
+  public ResponseEntity<Map<String, Object>> deleteEventById(@PathVariable Long eventId) {
+    Map<String, Object> response = new HashMap<>();
     try {
       eventService.delete(eventId);
-
-      return new ResponseEntity<>("Event deleted successfully.", HttpStatus.OK);
+      response.put("success", true);
+      response.put("data", Collections.emptyList());
+      return ResponseEntity.ok(response);
     } catch (EventNotExistException e) {
-      return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+      response.put("success", false);
+      response.put("data", Collections.emptyList());
+      response.put("message", e.getMessage());
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
   }
 
-  // Update an existing event's details.
   @PatchMapping("{eventId}")
-  public ResponseEntity<String> updateEvent(
+  public ResponseEntity<Map<String, Object>> updateEvent(
       @PathVariable Long eventId,
-      @RequestBody Event updatedEvent) {
-
+      @RequestParam(value = "name", required = false) String name,
+      @RequestParam(value = "time", required = false) String time,
+      @RequestParam(value = "date", required = false) String date,
+      @RequestParam(value = "location", required = false) String location,
+      @RequestParam(value = "description", required = false) String description,
+      @RequestParam(value = "capacity", required = false) String capacity,
+      @RequestParam(value = "budget", required = false) String budget,
+      @RequestParam(value = "images", required = false) MultipartFile[] images
+  ) {
+    Map<String, Object> response = new HashMap<>();
     try {
-      eventService.findById(eventId);
-//      if (existingEvent == null) {
-//        return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
-//      }
 
-      eventService.updateEvent(eventId, updatedEvent);
-      return new ResponseEntity<>("Event updated successfully", HttpStatus.OK);
+      Event existingEvent = eventService.findById(eventId);
+
+      Event updatedEvent = new Event.Builder()
+          .setName(name != null ? name : existingEvent.getName())
+          .setTime(time != null ? LocalTime.parse(time) : existingEvent.getTime())
+          .setDate(date != null ? LocalDate.parse(date) : existingEvent.getDate())
+          .setLocation(location != null ? location : existingEvent.getLocation())
+          .setDescription(description != null ? description : existingEvent.getDescription())
+          .setCapacity(capacity != null ? Integer.parseInt(capacity) : existingEvent.getCapacity())
+          .setBudget(budget != null ? Integer.parseInt(budget) : existingEvent.getBudget())
+          .setHost(existingEvent.getHost())
+          .setParticipants(existingEvent.getParticipants())
+          .build();
+
+      eventService.updateEvent(eventId, updatedEvent, images);
+
+      response.put("success", true);
+      response.put("data", Collections.emptyList()); // Always an empty array
+      return ResponseEntity.ok(response);
     } catch (EventNotExistException e) {
-      return new ResponseEntity<>("Event not found", HttpStatus.NOT_FOUND);
+      response.put("success", false);
+      response.put("data", Collections.emptyList());
+      response.put("message", "Event not found");
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     } catch (Exception e) {
-      return new ResponseEntity<>("Failed to update event", HttpStatus.BAD_REQUEST);
+      response.put("success", false);
+      response.put("data", Collections.emptyList());
+      response.put("message", "Failed to update event: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
   }
-
-
 }
+
