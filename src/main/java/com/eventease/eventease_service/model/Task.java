@@ -1,6 +1,5 @@
 package com.eventease.eventease_service.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -49,7 +48,7 @@ public class Task implements Serializable {
     @NotNull(message = "Assigned user is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_user_id", nullable = false)
-    @JsonIgnore
+    @JsonProperty("userID")
     private User assignedUser;
 
     public Task() {}

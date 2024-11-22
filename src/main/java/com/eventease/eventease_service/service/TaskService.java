@@ -1,6 +1,5 @@
 package com.eventease.eventease_service.service;
 
-import com.eventease.eventease_service.exception.EventNotExistException;
 import com.eventease.eventease_service.exception.TaskNotExistException;
 import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.Task;
@@ -33,27 +32,18 @@ public class TaskService {
      * Creates a new task associated with an event and a user.
      *
      * @param eventId the ID of the event to associate with the task
+     * @param userId the ID of the user to associate with the task
      * @param task the task to be created
      * @return the saved task
      */
+    @Transactional
     public Task createTask(Long eventId, Long userId, Task task) {
-        // Fetch the event using the event ID
         Event event = eventService.findById(eventId);
-        if (event == null) {
-            throw new EventNotExistException("Event with ID " + eventId + " does not exist.");
-        }
-
-        // Fetch the user using the user ID
         User user = userService.findUserById(userId);
-        if (user == null) {
-            throw new UserNotExistException("User with ID " + userId + " does not exist.");
-        }
 
-        // Set the fetched event and user to the task
         task.setEvent(event);
         task.setAssignedUser(user);
 
-        // Save and return the task
         return taskRepository.save(task);
     }
 
@@ -105,7 +95,10 @@ public class TaskService {
      * @param taskId the ID of the task to delete
      */
     public void deleteTask(Long taskId) {
-        taskRepository.deleteTask(taskId);
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotExistException("Task not found with ID: " + taskId));
+
+        taskRepository.delete(task);
     }
 
     /**
@@ -115,6 +108,8 @@ public class TaskService {
      * @return a list of tasks assigned to the user
      */
     public List<Task> getTasksByUser(Long userId) {
+        userService.findUserById(userId);
+        
         return taskRepository.findByAssignedUserId(userId);
     }
 
@@ -126,6 +121,10 @@ public class TaskService {
      * @throws TaskNotExistException if the task is not found
      */
     public Task getTaskById(Long taskId) {
+        if (taskId == null || taskId <= 0) {
+            throw new IllegalArgumentException("Invalid task ID");
+        }
+
         return taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotExistException("Task not found with ID: " + taskId));
     }
