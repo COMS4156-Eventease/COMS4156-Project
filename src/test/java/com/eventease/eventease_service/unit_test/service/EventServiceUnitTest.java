@@ -2,9 +2,11 @@ package com.eventease.eventease_service.unit_test.service;
 
 import com.eventease.eventease_service.exception.EventNotExistException;
 import com.eventease.eventease_service.model.Event;
+import com.eventease.eventease_service.model.EventImage;
 import com.eventease.eventease_service.repository.EventRepository;
 import com.eventease.eventease_service.service.EventService;
 import com.eventease.eventease_service.service.ImageStorageService;
+import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -111,7 +113,7 @@ public class EventServiceUnitTest {
 
   /**
    * Test the updateEvent method of EventService with new data and images.
-   * Verifies that the event is updated correctly.
+   * Verifies that the event is updated correctly and old images are cleared.
    */
   @Test
   void testUpdateEventWithImages() {
@@ -124,16 +126,27 @@ public class EventServiceUnitTest {
     updatedEvent.setCapacity(200);
     updatedEvent.setBudget(2000);
 
+    // Use a mutable list for existing images
+    List<EventImage> existingImages = new ArrayList<>(
+        List.of(new EventImage("http://image-url.com/old-image.jpg", testEvent))
+    );
+    testEvent.setImages(existingImages);
+
     eventService.updateEvent(1L, updatedEvent, new MultipartFile[]{testImage});
 
+    // Verify event fields are updated
     assertEquals("Updated Event", testEvent.getName());
     assertEquals("Updated Description", testEvent.getDescription());
     assertEquals(200, testEvent.getCapacity());
     assertEquals(2000, testEvent.getBudget());
+
+    // Verify old images are cleared and new images are added
     assertEquals(1, testEvent.getImages().size());
     assertEquals("http://image-url.com/updated-image.jpg", testEvent.getImages().get(0).getUrl());
+
     verify(eventRepository, times(1)).save(testEvent);
   }
+
 
   /**
    * Test the updateEvent method of EventService when the event does not exist.
@@ -153,18 +166,27 @@ public class EventServiceUnitTest {
   void testUpdateEventPartialUpdate() {
     when(eventRepository.findById(1L)).thenReturn(testEvent);
 
+    // Initialize the images field to an empty list to avoid NullPointerException
+    testEvent.setImages(new ArrayList<>());
+
     Event updatedEvent = new Event();
     updatedEvent.setName("Updated Event");
     updatedEvent.setCapacity(200);
 
     eventService.updateEvent(1L, updatedEvent, null);
 
+    // Verify only updated fields change
     assertEquals("Updated Event", testEvent.getName());
     assertEquals("Test Description", testEvent.getDescription());
     assertEquals(200, testEvent.getCapacity());
     assertEquals(1000, testEvent.getBudget());
+
+    // Verify images remain unchanged
+    assertTrue(testEvent.getImages().isEmpty());
+
     verify(eventRepository, times(1)).save(testEvent);
   }
+
 
   /**
    * Test the delete method of EventService when the event exists.
@@ -185,5 +207,20 @@ public class EventServiceUnitTest {
   void testDeleteWhenEventDoesNotExist() {
     when(eventRepository.findById(1L)).thenReturn(null);
     assertThrows(EventNotExistException.class, () -> eventService.delete(1L));
+  }
+
+  /**
+   * Test the findAllEvents method of EventService.
+   * Verifies that all events are returned correctly.
+   */
+  @Test
+  void testFindAllEvents() {
+    List<Event> events = Arrays.asList(testEvent);
+    when(eventRepository.findAll()).thenReturn(events);
+
+    List<Event> result = eventService.findAllEvents();
+
+    assertEquals(events, result);
+    verify(eventRepository, times(1)).findAll();
   }
 }

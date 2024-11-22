@@ -51,13 +51,11 @@ public class EventControllerUnitTest {
     organizer.setId(1L);
 
     Event event = new Event();
-    event.setId(123L);  // Set the expected event ID
+    event.setId(123L); // Set the expected event ID
     event.setName("Event Title");
 
-    // Mock the behavior of userService.findUserById
     when(userService.findUserById(1L)).thenReturn(organizer);
 
-    // Use an Answer to set eventId when eventService.add is called
     doAnswer(invocation -> {
       Event e = invocation.getArgument(0);
       e.setId(123L); // Set event ID to simulate the generated ID after saving
@@ -78,20 +76,20 @@ public class EventControllerUnitTest {
             .param("budget", "1200")
             .contentType(MediaType.MULTIPART_FORM_DATA))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.organizerId").value(1))
-        .andExpect(jsonPath("$.eventId").value(123));
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.data[0].organizerId").value(1))
+        .andExpect(jsonPath("$.data[0].eventId").value(123));
   }
+
 
   @Test
   public void addEventFailTest() throws Exception {
-    // Mock the behavior to throw a UserNotExistException when looking for organizer with ID 1
     when(userService.findUserById(1L)).thenThrow(new UserNotExistException("User is not found"));
 
-    // Dummy image file as the 'images' parameter
     MockMultipartFile image = new MockMultipartFile("images", "dummy-image.jpg", MediaType.IMAGE_JPEG_VALUE, "Dummy Image Content".getBytes());
 
     mockMvc.perform(multipart("/api/events")
-            .file(image)  // Provide the images part even for failure test
+            .file(image)
             .param("organizerId", "1")
             .param("name", "Event Title")
             .param("description", "Event description")
@@ -102,8 +100,11 @@ public class EventControllerUnitTest {
             .param("budget", "1200")
             .contentType(MediaType.MULTIPART_FORM_DATA))
         .andExpect(status().isNotFound())
-        .andExpect(content().string("Organizer not found"));
+        .andExpect(jsonPath("$.success").value(false))
+        .andExpect(jsonPath("$.data").isEmpty())
+        .andExpect(jsonPath("$.message").value("Organizer not found"));
   }
+
 
   @Test
   public void getEventByIdSuccessTest() throws Exception {
@@ -115,19 +116,23 @@ public class EventControllerUnitTest {
 
     mockMvc.perform(get("/api/events/123"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value(123))
-        .andExpect(jsonPath("$.name").value("Event Title"));
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.data[0].id").value(123))
+        .andExpect(jsonPath("$.data[0].name").value("Event Title"));
   }
+
 
   @Test
   public void getEventByIdFailTest() throws Exception {
     when(eventService.findById(123L)).thenThrow(new EventNotExistException("Event not found"));
 
-
     mockMvc.perform(get("/api/events/123"))
         .andExpect(status().isNotFound())
-        .andExpect(content().string("Event not found"));
+        .andExpect(jsonPath("$.success").value(false))
+        .andExpect(jsonPath("$.data").isEmpty())
+        .andExpect(jsonPath("$.message").value("Event not found"));
   }
+
 
   @Test
   public void getEventsSuccessTest() throws Exception {
@@ -147,20 +152,23 @@ public class EventControllerUnitTest {
 
     mockMvc.perform(get("/api/events?startDate=2024-11-01&endDate=2024-11-30"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].id").value(1))
-        .andExpect(jsonPath("$[1].id").value(2));
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.data[0].id").value(1))
+        .andExpect(jsonPath("$.data[1].id").value(2));
   }
+
 
   // Test for failing to retrieve events within a date range
   @Test
   public void getEventsFailTest() throws Exception {
-    when(eventService.findByDateBetween(LocalDate.of(2024, 11, 1), LocalDate.of(2024, 11, 30))).thenReturn(
-        Collections.emptyList());
+    when(eventService.findByDateBetween(LocalDate.of(2024, 11, 1), LocalDate.of(2024, 11, 30))).thenReturn(Collections.emptyList());
 
     mockMvc.perform(get("/api/events?startDate=2024-11-01&endDate=2024-11-30"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$").isEmpty());
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.data").isEmpty());
   }
+
 
   @Test
   public void updateEventSuccessTest() throws Exception {
@@ -177,11 +185,13 @@ public class EventControllerUnitTest {
             .file(image)
             .param("name", "Updated Event")
             .param("capacity", "200")
-            .with(request -> { request.setMethod("PATCH"); return request; })  // Set method to PATCH
+            .with(request -> { request.setMethod("PATCH"); return request; }) // Set method to PATCH
             .contentType(MediaType.MULTIPART_FORM_DATA))
         .andExpect(status().isOk())
-        .andExpect(content().string("Event updated successfully"));
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.data").isEmpty());
   }
+
 
   // Test for failing to update an event (event not found)
   @Test
@@ -193,6 +203,9 @@ public class EventControllerUnitTest {
             .param("capacity", "200")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound())
-        .andExpect(content().string("Event not found"));
+        .andExpect(jsonPath("$.success").value(false))
+        .andExpect(jsonPath("$.data").isEmpty())
+        .andExpect(jsonPath("$.message").value("Event not found"));
   }
+
 }
