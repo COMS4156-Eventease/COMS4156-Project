@@ -30,7 +30,6 @@ class EmailServiceUnitTest {
         mailSenderMock = mock(JavaMailSender.class);
 
         when(emailConfigMock.getJavaMailSender()).thenReturn(mailSenderMock);
-        when(emailConfigMock.verifyEmailConfig()).thenReturn(true);
 
         emailService = new EmailService(emailConfigMock);
 

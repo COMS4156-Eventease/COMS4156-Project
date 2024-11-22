@@ -81,9 +81,7 @@ public class NotificationController {
             } catch (EventNotExistException e) {
                 return ResponseEntity.badRequest().body("Event does not exist: " + e.getMessage());
             }
-
-            String eventName = event.getName();
-
+            System.out.println(event);
             String formattedMessage = String.format("Dear %s %s,\n%s",
                     user.getFirstName(), user.getLastName(), message);
 
@@ -161,9 +159,7 @@ public class NotificationController {
             } catch (EventNotExistException e) {
                 return ResponseEntity.badRequest().body("Event does not exist: " + e.getMessage());
             }
-
-            String eventName = event.getName();
-
+            System.out.println(event);
             String formattedMessage = String.format("Dear %s %s,\n\n%s",
                     user.getFirstName(), user.getLastName(), message);
 

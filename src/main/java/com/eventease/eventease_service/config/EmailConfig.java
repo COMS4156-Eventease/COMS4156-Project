@@ -33,7 +33,6 @@ public class EmailConfig {
 
         logger.info("Configuring mail sender with host: {}, port: {}", mailHost, mailPort);
 
-        // Set mail server properties
         mailSender.setHost(mailHost);
         mailSender.setPort(mailPort);
         mailSender.setUsername(mailUsername);
