@@ -64,7 +64,7 @@ public class Event implements Serializable {
   )
   private Set<User> participants = new HashSet<User>();
 
-  @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
   private List<EventImage> images;
 
   public Event() {

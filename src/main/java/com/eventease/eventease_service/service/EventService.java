@@ -75,8 +75,31 @@ public class EventService {
     existingEvent.setHost(existingEvent.getHost()); // Retain original host
     existingEvent.setParticipants(existingEvent.getParticipants()); // Retain original participants
 
-    // Update images if provided
+    // Remove existing images if new images are provided
+//    if (images != null && images.length > 0) {
+//      existingEvent.getImages().clear(); // Clear the current list of images
+//
+//      // Save the new images
+//      List<String> mediaLinks = Arrays.stream(images)
+//          .parallel()
+//          .map(imageStorageService::save)
+//          .collect(Collectors.toList());
+//
+//      List<EventImage> eventImages = mediaLinks.stream()
+//          .map(mediaLink -> new EventImage(mediaLink, existingEvent))
+//          .collect(Collectors.toList());
+//
+//      existingEvent.setImages(eventImages); // Set the new images
+//
+//    }
+//
+//    // Save the updated event back to the repository
+//    eventRepository.save(existingEvent);
     if (images != null && images.length > 0) {
+      // Clear existing images
+      existingEvent.getImages().clear();
+
+      // Save the new images
       List<String> mediaLinks = Arrays.stream(images)
           .parallel()
           .map(imageStorageService::save)
@@ -86,7 +109,7 @@ public class EventService {
           .map(mediaLink -> new EventImage(mediaLink, existingEvent))
           .collect(Collectors.toList());
 
-      existingEvent.setImages(eventImages);
+      existingEvent.getImages().addAll(eventImages);
     }
 
     // Save the updated event back to the repository
@@ -105,5 +128,10 @@ public class EventService {
     // Delete the event by its ID
     eventRepository.deleteById(id);
   }
+
+  public List<Event> findAllEvents() {
+    return eventRepository.findAll();
+  }
+
 }
 
