@@ -38,6 +38,15 @@ public class RSVPService {
     if(rsvpCheck.isPresent()) {
       throw new RSVPExistsException("RSVP Already Exists");
     }
+
+    // check RSVP with overlapping time
+    List<RSVP> overlappingRSVPs = rsvpRepository.findOverlappingRSVPs(
+            user.getId(), rsvp.getStartTime(), rsvp.getEndTime()
+    );
+    if (!overlappingRSVPs.isEmpty()) {
+      throw new RSVPOverlapException("RSVP overlaps with an existing RSVP");
+    }
+
     rsvp.setEvent(event);
     rsvp.setUser(user);
     event.setRsvpCount(event.getRsvpCount() + 1);
