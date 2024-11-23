@@ -29,7 +29,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
-@ActiveProfiles("test")
 public class RSVPControllerUnitTest {
   @InjectMocks
   RSVPController rsvpController;
