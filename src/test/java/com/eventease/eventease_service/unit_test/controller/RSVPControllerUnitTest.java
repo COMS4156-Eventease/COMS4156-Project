@@ -47,7 +47,7 @@ public class RSVPControllerUnitTest {
     User user = new User();
     user.setId(1L);
 
-    rsvp = new RSVP(user, event, "Going", LocalDateTime.now(), "Looking forward", false, "Guest");
+    rsvp = new RSVP(user, event, "Going", LocalDateTime.now(), LocalDateTime.now(),"Looking forward", false, "Guest");
   }
 
   @Test
@@ -61,16 +61,18 @@ public class RSVPControllerUnitTest {
   public void createRSVPEventFailure()  {
     when(rsvpService.createRSVP(any(String.class), any(String.class), any(RSVP.class))).thenThrow(new EventNotExistException("Event Not Found"));
     ResponseEntity<?> response = rsvpController.createRSVP("1", "1", rsvp);
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    assertEquals("Event Not Found", response.getBody());
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+    assertEquals("Event Not Found", responseBody.get("message"));
   }
 
   @Test
   public void createRSVPUserFailure() {
     when(rsvpService.createRSVP(any(String.class), any(String.class), any(RSVP.class))).thenThrow(new UserNotExistException("User Not Found"));
     ResponseEntity<?> response = rsvpController.createRSVP("1", "1", rsvp);
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    assertEquals("User Not Found", response.getBody());
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+    assertEquals("User Not Found", responseBody.get("message"));
   }
 
   @Test
