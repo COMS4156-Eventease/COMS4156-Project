@@ -18,10 +18,8 @@ public class UserService {
 
     public User addUser(User user) {
         // check if user already exists
-        if(user.getId() != null){
-            if(userRepository.findById(user.getId()).isPresent()){
-                throw new UserExistsException("User already exists");
-            }
+        if(userRepository.findById(user.getId()).isPresent()){
+            throw new UserExistsException("User already exists");
         }
 
         user.setCreatedAt(new Timestamp(System.currentTimeMillis()));
