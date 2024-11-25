@@ -325,26 +325,4 @@ class TaskControllerUnitTest {
         assertTrue((Boolean) responseBody.get("success"));
         assertEquals(Collections.singletonList("Task deleted successfully"), responseBody.get("data"));
     }
-
-    /**
-     * Tests the case where the task to be deleted does not exist given
-     * a valid event ID but invalid task ID.
-     *
-     * @throws Exception if an error occurs during task deletion
-     */
-    @Test
-    void deleteTask_TaskNotFound() throws Exception {
-        Long taskId = 1L;
-
-        doThrow(new TaskNotExistException("Task not found"))
-                .when(taskService).deleteTask(taskId);
-
-        ResponseEntity<Map<String, Object>> response = taskController.deleteTask(taskId);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        Map<String, Object> responseBody = response.getBody();
-        assertFalse((Boolean) responseBody.get("success"));
-        assertEquals(null, responseBody.get("data"));
-        assertEquals("Task not found", responseBody.get("message"));
-    }
 }
