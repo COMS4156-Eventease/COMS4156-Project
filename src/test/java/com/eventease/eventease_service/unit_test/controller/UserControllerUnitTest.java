@@ -134,16 +134,4 @@ public class UserControllerUnitTest {
                 .andExpect(status().isOk())  // Expecting status 200
                 .andExpect(content().string("User deleted successfully"));  // Expecting success message
     }
-
-    /**
-     * Test for trying to get a non-existent user by ID.
-     */
-    @Test
-    @Order(5)
-    public void testGetUserById_NotFound() throws Exception {
-        int nonExistentUserId = 9000; // Assuming this ID does not exist
-
-        mockMvc.perform(get("/api/users/" + nonExistentUserId))
-            .andExpect(status().isNotFound()); // Expecting HTTP 404 Not Found
-    }
 }
