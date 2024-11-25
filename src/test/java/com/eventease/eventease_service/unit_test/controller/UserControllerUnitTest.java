@@ -1,6 +1,7 @@
 package com.eventease.eventease_service.unit_test.controller;
 
 import com.eventease.eventease_service.controller.UserController;
+import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.service.UserService;
 
@@ -21,6 +22,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 /**
@@ -71,8 +74,8 @@ public class UserControllerUnitTest {
         mockMvc.perform(post("/api/users/add")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"firstName\": \"John\", \"lastName\": \"Doe\", \"email\": \"john.doe@example.com\"}"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("User saved successfully"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true));
 
         // confirm user was added, and store its id
         this.getTestUserId();
@@ -87,7 +90,7 @@ public class UserControllerUnitTest {
         int testUserId = this.getTestUserId(); // Assuming a user with this ID exists
 
         mockMvc.perform(get("/api/users/" + testUserId))
-            .andExpect(status().isOk()); // Expecting HTTP 200 OK
+                .andExpect(status().isOk()); // Expecting HTTP 200 OK
     }
 
     /**
@@ -127,11 +130,41 @@ public class UserControllerUnitTest {
      */
     @Test
     @Order(4)
-    public void testDeleteUser() throws Exception {
-        int TestUserId = this.getTestUserId();
+    void testDeleteUserSuccess() throws Exception {
+        Long testUserId = 1L;
+        doNothing().when(userService).deleteUser(testUserId);
 
-        mockMvc.perform(delete("/api/users/delete/" + TestUserId))
-                .andExpect(status().isOk())  // Expecting status 200
-                .andExpect(content().string("User deleted successfully"));  // Expecting success message
+        mockMvc.perform(delete("/api/users/delete/" + testUserId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    @Order(5)
+    void testDeleteUserNotExist() throws Exception {
+        Long testUserId = 1L;
+
+        doThrow(new UserNotExistException("User does not exist")).when(userService).deleteUser(testUserId);
+
+        mockMvc.perform(delete("/api/users/delete/" + testUserId))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error").value("User does not exist"));
+    }
+
+    @Test
+    @Order(6)
+    void testDeleteUserInternalServerError() throws Exception {
+        Long testUserId = 1L;
+
+        doThrow(new RuntimeException("Unexpected error"))
+                .when(userService).deleteUser(testUserId);
+
+        mockMvc.perform(delete("/api/users/delete/" + testUserId))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error").value("Unexpected error"));
     }
 }
+
