@@ -118,7 +118,7 @@ public class RSVPController {
    * @return                          a ResponseEntity with successful message
    *                                  or an error message if the event is not found
    */
-  @RequestMapping(value = "{eventId}/rsvp/cancel/{userId}", method = RequestMethod.DELETE)
+  @DeleteMapping(value = "{eventId}/rsvp/cancel/{userId}")
   public ResponseEntity<?> cancelRSVP(@PathVariable String eventId, @PathVariable String userId) {
     Map<String, Object> response = new HashMap<>();
     try{
