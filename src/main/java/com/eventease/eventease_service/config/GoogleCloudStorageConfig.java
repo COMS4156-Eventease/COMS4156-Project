@@ -5,6 +5,8 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+
+import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,9 +17,9 @@ public class GoogleCloudStorageConfig {
   public Storage storage() throws IOException {
     // Load environment variables from .env file
     //
-//    Dotenv dotenv = Dotenv.configure().load();
-//    String credentialsJson = dotenv.get("GCP_CREDENTIALS");
-    String credentialsJson = System.getenv("GCP_CREDENTIALS");
+    Dotenv dotenv = Dotenv.configure().load();
+    String credentialsJson = dotenv.get("GCP_CREDENTIALS");
+//    String credentialsJson = System.getenv("GCP_CREDENTIALS");
     if (credentialsJson == null || credentialsJson.isEmpty()) {
       throw new IllegalStateException("Environment variable GCP_CREDENTIALS is not set or empty.");
     }

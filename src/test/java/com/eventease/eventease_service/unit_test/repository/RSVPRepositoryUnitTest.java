@@ -5,8 +5,6 @@ import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.repository.EventRepository;
 import com.eventease.eventease_service.repository.RSVPRepository;
 import com.eventease.eventease_service.repository.UserRepository;
-import jakarta.transaction.Transactional;
-import org.junit.Before;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +53,7 @@ public class RSVPRepositoryUnitTest {
     rsvp.setUser(user);
     rsvp.setEvent(event);
     rsvp.setStatus("CONFIRMED");
-    rsvp.setTimestamp(LocalDateTime.now());
+    rsvp.setStartTime(LocalDateTime.now());
     rsvp.setNotes("Looking forward to the event!");
     rsvp.setReminderSent(false);
     rsvp.setEventRole("Attendee");
@@ -83,16 +81,4 @@ public class RSVPRepositoryUnitTest {
     List<RSVP> foundRSVP = rsvpRepository.findByEvent(event);
     assertTrue(foundRSVP.size() == 1);
   }
-
-//  @Test
-//  public void testFindByEventFailure() {
-//    Event event2 = new Event();
-//    event2.setId(2L);
-//    List<RSVP> foundRSVP = rsvpRepository.findByEvent(event2);
-//    assertTrue(foundRSVP.size() == 0);
-//  }
-
-
-
-
 }

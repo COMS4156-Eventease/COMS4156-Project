@@ -1,5 +1,6 @@
 package com.eventease.eventease_service.service;
 
+import com.eventease.eventease_service.exception.UserExistsException;
 import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.repository.UserRepository;
@@ -15,12 +16,15 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public void addUser(User user) {
-        // Set any additional logic if necessary (e.g., default values)
-        user.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+    public User addUser(User user) {
+        // check if user already exists
+        if(userRepository.findById(user.getId()).isPresent()){
+            throw new UserExistsException("User already exists");
+        }
 
-        // Save the user to the database
-        userRepository.save(user);
+        user.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+        User addedUser = userRepository.save(user);
+        return addedUser;
     }
 
     public Iterable<User> getUsersByFilter(
@@ -65,11 +69,11 @@ public class UserService {
     }
   // This method retrieves a user by its ID. If the user is not found, it throws an exception
   public User findUserById(long id) {
-      User user = userRepository.findById(id);  // This line should be updated to use Optional
-      if (user == null) {
+      Optional<User> user = userRepository.findById(id);  // This line should be updated to use Optional
+      if (!user.isPresent()) {
           throw new UserNotExistException("User is not found.");
       }
-      return user;
+      return user.get();
   }
 
     public void deleteUser(Long id) {

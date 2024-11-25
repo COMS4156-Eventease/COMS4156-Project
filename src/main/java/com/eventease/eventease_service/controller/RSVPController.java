@@ -1,9 +1,6 @@
 package com.eventease.eventease_service.controller;
 
-import com.eventease.eventease_service.exception.EventNotExistException;
-import com.eventease.eventease_service.exception.RSVPExistsException;
-import com.eventease.eventease_service.exception.RSVPNotExistException;
-import com.eventease.eventease_service.exception.UserNotExistException;
+import com.eventease.eventease_service.exception.*;
 import com.eventease.eventease_service.model.RSVP;
 import com.eventease.eventease_service.service.RSVPService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,20 +46,19 @@ public class RSVPController {
 
       return new ResponseEntity<>(response, HttpStatus.CREATED);
 
-    } catch (EventNotExistException | UserNotExistException error) {
-
+    } catch (EventNotExistException | UserNotExistException | RSVPOverlapException error) {
       response.put("success", false);
       response.put("data", new ArrayList<>());
       response.put("message", error.getMessage());
 
-      return new ResponseEntity<>(error.getMessage(), HttpStatus.NOT_FOUND);
+      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 
     } catch (RSVPExistsException error) {
       response.put("success", false);
       response.put("data", new ArrayList<>());
       response.put("message", error.getMessage());
 
-      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<>(response, HttpStatus.CONFLICT);
 
     } catch (Exception e) {
       response.put("success", false);
@@ -75,7 +71,7 @@ public class RSVPController {
 
 
   /**
-   * Endpoint for creating an RSVP for a user to an event
+   * Endpoint for getting all the RSVPs for an event
    * This method handles GET requests to retrieve the list of RSVPs to an event;
    *
    * @param eventId                 the ID of the event
@@ -122,7 +118,7 @@ public class RSVPController {
    * @return                          a ResponseEntity with successful message
    *                                  or an error message if the event is not found
    */
-  @RequestMapping(value = "{eventId}/rsvp/cancel/{userId}", method = RequestMethod.DELETE)
+  @DeleteMapping(value = "{eventId}/rsvp/cancel/{userId}")
   public ResponseEntity<?> cancelRSVP(@PathVariable String eventId, @PathVariable String userId) {
     Map<String, Object> response = new HashMap<>();
     try{

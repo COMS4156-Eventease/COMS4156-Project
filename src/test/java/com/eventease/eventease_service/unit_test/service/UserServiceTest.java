@@ -11,6 +11,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -64,7 +66,8 @@ public class UserServiceTest {
     public void testFindUserById_UserExists() {
         User user = new User();
         user.setId(1L);
-        when(userRepository.findById(1L)).thenReturn(user);  // Directly returning user
+        Optional<User> userOptional = Optional.of(user);
+        when(userRepository.findById(1L)).thenReturn(userOptional);
 
         User result = userService.findUserById(1L);
 
@@ -75,7 +78,7 @@ public class UserServiceTest {
     @Test
     public void testFindUserById_UserNotFound() {
         // Assuming findById returns null when the user is not found
-        when(userRepository.findById(1L)).thenReturn(null);
+        when(userRepository.findById(1L)).thenThrow(new UserNotExistException("User not found"));
 
         assertThrows(UserNotExistException.class, () -> {
             userService.findUserById(1L);
