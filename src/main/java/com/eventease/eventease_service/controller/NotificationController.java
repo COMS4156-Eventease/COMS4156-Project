@@ -134,17 +134,17 @@ public class NotificationController {
             }
 
             Long userId;
-            Long eventId;
+            //Long eventId;
             try {
                 userId = Long.parseLong(userIdString);
-                eventId = Long.parseLong(eventIdString);
+                //eventId = Long.parseLong(eventIdString);
             } catch (NumberFormatException e) {
                 return ResponseEntity.badRequest().body("Invalid ID format");
             }
 
             // Get user and event
             User user = userService.findUserById(userId);
-            Event event = eventService.findById(eventId);
+            //Event event = eventService.findById(eventId);
 
             // Validate email
             if (user.getEmail() == null || !EMAIL_PATTERN.matcher(user.getEmail()).matches()) {
