@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -67,6 +66,10 @@ class NotificationControllerUnitTest {
         return mockEvent;
     }
 
+    /**
+     * Tests the successful sending of an SMS message with valid inputs.
+     * Verifies response status, message, and service interactions.
+     */
     @Test
     void testSendMessage_Success() {
         Map<String, Object> request = new HashMap<>();
@@ -87,6 +90,10 @@ class NotificationControllerUnitTest {
         verify(twilioService).sendSms(TEST_PHONE, "Dear John Doe,\nHello, this is a test message!");
     }
 
+    /**
+     * Tests the handling of an invalid user ID format in the SMS endpoint.
+     * Verifies that a 400 status is returned and no service calls are made.
+     */
     @Test
     void testSendMessage_InvalidUserId() {
         Map<String, Object> request = new HashMap<>();
@@ -101,6 +108,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, twilioService);
     }
 
+    /**
+     * Tests the SMS endpoint's response when the userId is missing from the request.
+     * Verifies that appropriate error message is returned and no services are called.
+     */
     @Test
     void testSendMessage_MissingUserId() {
         Map<String, Object> request = new HashMap<>();
@@ -114,6 +125,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, twilioService);
     }
 
+    /**
+     * Tests the handling of an invalid phone number format.
+     * Verifies that a 400 status is returned with appropriate error message.
+     */
     @Test
     void testSendMessage_InvalidPhoneNumber() {
         User mockUser = getMockUser();
@@ -133,6 +148,10 @@ class NotificationControllerUnitTest {
         assertEquals("Invalid phone number format", response.getBody());
     }
 
+    /**
+     * Tests the handling of a missing phone number in the user profile.
+     * Verifies appropriate error response when phone number is null.
+     */
     @Test
     void testSendMessage_MissingPhoneNumber() {
         User mockUser = getMockUser();
@@ -152,6 +171,10 @@ class NotificationControllerUnitTest {
         assertEquals("User's phone number is not available", response.getBody());
     }
 
+    /**
+     * Tests the successful sending of an email with valid inputs.
+     * Verifies response status, message, and email service interaction.
+     */
     @Test
     void testSendEmail_Success() {
         Map<String, Object> request = new HashMap<>();
@@ -175,6 +198,10 @@ class NotificationControllerUnitTest {
         verify(emailService).sendEmail(anyString(), anyString(), anyString());
     }
 
+    /**
+     * Tests validation of required fields (subject and message) in email endpoint.
+     * Verifies appropriate error responses for missing fields.
+     */
     @Test
     void testSendEmail_MissingRequiredFields() {
         Map<String, Object> request = new HashMap<>();
@@ -196,6 +223,10 @@ class NotificationControllerUnitTest {
         assertEquals("Message is required", response.getBody());
     }
 
+    /**
+     * Tests handling of non-existent event ID in SMS endpoint.
+     * Verifies appropriate error response when event is not found.
+     */
     @Test
     void testSendMessage_EventNotFound() {
         Map<String, Object> request = new HashMap<>();
@@ -211,6 +242,10 @@ class NotificationControllerUnitTest {
         assertEquals("Event does not exist: Event not found", response.getBody());
     }
 
+    /**
+     * Tests handling of non-existent user ID in SMS endpoint.
+     * Verifies appropriate error response when user is not found.
+     */
     @Test
     void testSendMessage_UserNotExist() {
         Map<String, Object> request = new HashMap<>();
@@ -225,6 +260,10 @@ class NotificationControllerUnitTest {
         assertEquals("User does not exist: User not found", response.getBody());
     }
 
+    /**
+     * Tests handling of SMS service failures.
+     * Verifies 500 status response and error message when Twilio service fails.
+     */
     @Test
     void testSendMessage_InternalServerError() {
         when(userService.findUserById(USER_ID)).thenReturn(getMockUser());
@@ -243,6 +282,10 @@ class NotificationControllerUnitTest {
         assertTrue(response.getBody().contains("Failed to send notification"));
     }
 
+    /**
+     * Tests handling of email service failures.
+     * Verifies 500 status response and error message when email service fails.
+     */
     @Test
     void testSendEmail_InternalServerError() {
         when(userService.findUserById(USER_ID)).thenReturn(getMockUser());
@@ -262,7 +305,10 @@ class NotificationControllerUnitTest {
         assertTrue(response.getBody().contains("Failed to send email"));
     }
 
-
+    /**
+     * Tests handling of IllegalArgumentException before service calls in email endpoint.
+     * Verifies appropriate error response for invalid arguments.
+     */
     @Test
     void testSendEmail_IllegalArgumentBeforeServiceCall() {
         Map<String, Object> request = new HashMap<>();
@@ -279,6 +325,10 @@ class NotificationControllerUnitTest {
         assertTrue(response.getBody().contains("Invalid request format"));
     }
 
+    /**
+     * Tests handling of ClassCastException in email endpoint.
+     * Verifies error response when request contains invalid data types.
+     */
     @Test
     void testSendEmail_ClassCastException() {
         Map<String, Object> request = new HashMap<>();
@@ -292,6 +342,10 @@ class NotificationControllerUnitTest {
         assertTrue(response.getBody().contains("Failed to send email"));
     }
 
+    /**
+     * Tests validation of empty message in SMS endpoint.
+     * Verifies appropriate error response for empty message string.
+     */
     @Test
     void testSendMessage_EmptyMessage() {
         Map<String, Object> request = new HashMap<>();
@@ -306,6 +360,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, twilioService);
     }
 
+    /**
+     * Tests validation of null message in SMS endpoint.
+     * Verifies appropriate error response for null message.
+     */
     @Test
     void testSendMessage_NullMessage() {
         Map<String, Object> request = new HashMap<>();
@@ -320,6 +378,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, twilioService);
     }
 
+    /**
+     * Tests validation of empty event ID in SMS endpoint.
+     * Verifies appropriate error response for empty event ID.
+     */
     @Test
     void testSendMessage_EmptyEventId() {
         Map<String, Object> request = new HashMap<>();
@@ -334,6 +396,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, twilioService);
     }
 
+    /**
+     * Tests phone number formatting functionality.
+     * Verifies correct formatting of phone numbers with dashes.
+     */
     @Test
     void testSendMessage_PhoneNumberFormatting() {
         User mockUser = getMockUser();
@@ -353,6 +419,10 @@ class NotificationControllerUnitTest {
         verify(twilioService).sendSms("+11234567890", "Dear John Doe,\n" + TEST_MESSAGE);
     }
 
+    /**
+     * Tests validation of null email in user profile.
+     * Verifies appropriate error response when email is null.
+     */
     @Test
     void testSendEmail_NullEmail() {
         User mockUser = getMockUser();
@@ -374,6 +444,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(emailService);
     }
 
+    /**
+     * Tests validation of empty event ID in email endpoint.
+     * Verifies appropriate error response for empty event ID.
+     */
     @Test
     void testSendEmail_EmptyEventId() {
         Map<String, Object> request = new HashMap<>();
@@ -389,6 +463,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, emailService);
     }
 
+    /**
+     * Tests handling of invalid event ID format in SMS endpoint.
+     * Verifies appropriate error response for malformed event ID.
+     */
     @Test
     void testSendMessage_InvalidEventId() {
         Map<String, Object> request = new HashMap<>();
@@ -403,6 +481,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, twilioService);
     }
 
+    /**
+     * Tests handling of non-existent user in email endpoint.
+     * Verifies appropriate error response when user is not found.
+     */
     @Test
     void testSendEmail_UserNotExist() {
         Map<String, Object> request = new HashMap<>();
@@ -421,6 +503,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(emailService);
     }
 
+    /**
+     * Tests handling of non-existent event in email endpoint.
+     * Verifies appropriate error response when event is not found.
+     */
     @Test
     void testSendEmail_EventNotExist() {
         Map<String, Object> request = new HashMap<>();
@@ -441,7 +527,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(emailService);
     }
 
-
+    /**
+     * Tests handling of non-string user ID in SMS endpoint.
+     * Verifies error response when userId is wrong type.
+     */
     @Test
     void testSendMessage_IllegalArgumentException_NonStringUserId() {
         Map<String, Object> request = new HashMap<>();
@@ -456,6 +545,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, twilioService);
     }
 
+    /**
+     * Tests handling of non-string message in SMS endpoint.
+     * Verifies error response when message is wrong type.
+     */
     @Test
     void testSendMessage_IllegalArgumentException_NonStringMessage() {
         Map<String, Object> request = new HashMap<>();
@@ -470,6 +563,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, twilioService);
     }
 
+    /**
+     * Tests handling of IllegalArgumentException from service layer in SMS endpoint.
+     * Verifies appropriate error response when service throws exception.
+     */
     @Test
     void testSendMessage_IllegalArgumentException_FromService() {
         Map<String, Object> request = new HashMap<>();
@@ -489,6 +586,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(twilioService);
     }
 
+    /**
+     * Tests handling of IllegalArgumentException from Twilio service.
+     * Verifies appropriate error response when SMS service throws exception.
+     */
     @Test
     void testSendMessage_IllegalArgumentException_FromTwilioService() {
         User mockUser = getMockUser();
@@ -513,6 +614,10 @@ class NotificationControllerUnitTest {
         verify(twilioService).sendSms(anyString(), anyString());
     }
 
+    /**
+     * Tests validation of missing user ID in email endpoint.
+     * Verifies appropriate error response when userId is missing.
+     */
     @Test
     void testSendEmail_MissingUserId() {
         Map<String, Object> request = new HashMap<>();
@@ -527,6 +632,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, emailService);
     }
 
+    /**
+     * Tests validation of empty user ID in email endpoint.
+     * Verifies appropriate error response for whitespace-only userId.
+     */
     @Test
     void testSendEmail_EmptyUserId() {
         Map<String, Object> request = new HashMap<>();
@@ -542,7 +651,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, emailService);
     }
 
-
+    /**
+     * Tests validation of missing subject in email endpoint.
+     * Verifies appropriate error response when subject is missing.
+     */
     @Test
     void testSendEmail_MissingSubject() {
         Map<String, Object> request = new HashMap<>();
@@ -557,6 +669,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, emailService);
     }
 
+    /**
+     * Tests validation of empty subject in email endpoint.
+     * Verifies appropriate error response for whitespace-only subject.
+     */
     @Test
     void testSendEmail_EmptySubject() {
         Map<String, Object> request = new HashMap<>();
@@ -572,6 +688,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, emailService);
     }
 
+    /**
+     * Tests validation of missing message in email endpoint.
+     * Verifies appropriate error response when message is missing.
+     */
     @Test
     void testSendEmail_MissingMessage() {
         Map<String, Object> request = new HashMap<>();
@@ -586,6 +706,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, emailService);
     }
 
+    /**
+     * Tests validation of empty message in email endpoint.
+     * Verifies appropriate error response for whitespace-only message.
+     */
     @Test
     void testSendEmail_EmptyMessage() {
         Map<String, Object> request = new HashMap<>();
@@ -601,6 +725,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, emailService);
     }
 
+    /**
+     * Tests validation of invalid ID format in email endpoint.
+     * Verifies appropriate error response for malformed IDs.
+     */
     @Test
     void testSendEmail_InvalidIdFormat() {
         Map<String, Object> request = new HashMap<>();
@@ -616,6 +744,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(userService, eventService, emailService);
     }
 
+    /**
+     * Tests validation of invalid email format in email endpoint.
+     * Verifies appropriate error response for malformed email address.
+     */
     @Test
     void testSendEmail_InvalidEmailFormat() {
         User mockUser = getMockUser();
@@ -639,6 +771,10 @@ class NotificationControllerUnitTest {
         verifyNoInteractions(emailService);
     }
 
+    /**
+     * Tests handling of email service exceptions.
+     * Verifies error response when email service throws runtime exception.
+     */
     @Test
     void testSendEmail_EmailServiceException() {
         Map<String, Object> request = new HashMap<>();
