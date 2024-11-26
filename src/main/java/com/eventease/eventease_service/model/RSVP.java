@@ -2,10 +2,7 @@ package com.eventease.eventease_service.model;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -29,7 +26,9 @@ public class RSVP {
 
   private String status;
 
-  private LocalDateTime timestamp;
+  private LocalDateTime startTime;
+
+  private LocalDateTime endTime;
 
   private String notes;
 
