@@ -42,7 +42,7 @@ class NotificationControllerUnitTest {
     private static final Long EVENT_ID = 1L;
     private static final String TEST_PHONE = "+1234567890";
     private static final String TEST_EMAIL = "user@example.com";
-    private static final String TEST_MESSAGE = "Hello, this is a test message!";
+    private static final String TEST_MESSAGE = "You are invited to Sample Event.";
     private static final String TEST_SUBJECT = "Test Subject";
     private static final String TEST_FIRST_NAME = "John";
     private static final String TEST_LAST_NAME = "Doe";
@@ -79,7 +79,7 @@ class NotificationControllerUnitTest {
 
         when(userService.findUserById(USER_ID)).thenReturn(getMockUser());
         when(eventService.findById(EVENT_ID)).thenReturn(getMockEvent());
-        doNothing().when(twilioService).sendSms(TEST_PHONE, "Dear John Doe,\nHello, this is a test message!");
+        doNothing().when(twilioService).sendSms(TEST_PHONE, "Dear John Doe,\nYou are invited to Sample Event.");
 
         ResponseEntity<String> response = notificationController.sendMessage(request);
 
@@ -87,7 +87,7 @@ class NotificationControllerUnitTest {
         assertEquals("Notification sent!", response.getBody());
         verify(userService).findUserById(USER_ID);
         verify(eventService).findById(EVENT_ID);
-        verify(twilioService).sendSms(TEST_PHONE, "Dear John Doe,\nHello, this is a test message!");
+        verify(twilioService).sendSms(TEST_PHONE, "Dear John Doe,\nYou are invited to Sample Event.");
     }
 
     /**
@@ -195,7 +195,7 @@ class NotificationControllerUnitTest {
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals("Email sent successfully!", response.getBody());
-        verify(emailService).sendEmail(anyString(), anyString(), anyString());
+        verify(emailService).sendEmail("john.doe@example.com", TEST_SUBJECT, "Dear John Doe,\n\n" + TEST_MESSAGE);
     }
 
     /**
@@ -783,8 +783,10 @@ class NotificationControllerUnitTest {
         request.put("subject", TEST_SUBJECT);
         request.put("message", TEST_MESSAGE);
 
-        when(userService.findUserById(USER_ID)).thenReturn(getMockUser());
-        when(eventService.findById(EVENT_ID)).thenReturn(getMockEvent());
+        User mockUser = getMockUser();
+        Event mockEvent = getMockEvent();
+        when(userService.findUserById(USER_ID)).thenReturn(mockUser);
+        when(eventService.findById(EVENT_ID)).thenReturn(mockEvent); // Add missing mock
         doThrow(new RuntimeException("Email service error"))
                 .when(emailService).sendEmail(anyString(), anyString(), anyString());
 
@@ -792,6 +794,7 @@ class NotificationControllerUnitTest {
 
         assertEquals(500, response.getStatusCode().value());
         assertTrue(response.getBody().contains("Failed to send email"));
+
         verify(userService).findUserById(USER_ID);
         verify(eventService).findById(EVENT_ID);
         verify(emailService).sendEmail(anyString(), anyString(), anyString());

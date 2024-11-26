@@ -81,7 +81,9 @@ public class NotificationController {
             } catch (EventNotExistException e) {
                 return ResponseEntity.badRequest().body("Event does not exist: " + e.getMessage());
             }
-            System.out.println(event);
+
+            message = "You are invited to " + event.getName() + ".";
+
             String formattedMessage = String.format("Dear %s %s,\n%s",
                     user.getFirstName(), user.getLastName(), message);
 
@@ -134,23 +136,24 @@ public class NotificationController {
             }
 
             Long userId;
-            //Long eventId;
+            Long eventId;
             try {
                 userId = Long.parseLong(userIdString);
-                //eventId = Long.parseLong(eventIdString);
+                eventId = Long.parseLong(eventIdString);
             } catch (NumberFormatException e) {
                 return ResponseEntity.badRequest().body("Invalid ID format");
             }
 
             // Get user and event
             User user = userService.findUserById(userId);
-            //Event event = eventService.findById(eventId);
+            Event event = eventService.findById(eventId);
 
             // Validate email
             if (user.getEmail() == null || !EMAIL_PATTERN.matcher(user.getEmail()).matches()) {
                 return ResponseEntity.badRequest().body("Invalid user email");
             }
 
+            message = "You are invited to " + event.getName() + ".";
             String formattedMessage = String.format("Dear %s %s,\n\n%s",
                     user.getFirstName(), user.getLastName(), message);
 
