@@ -276,13 +276,13 @@ class NotificationControllerUnitTest {
 
         ResponseEntity<String> response = notificationController.sendEmail(request);
         assertEquals(400, response.getStatusCode().value());
-        assertTrue(response.getBody().contains("Invalid request format"));  // Changed to match actual error message
+        assertTrue(response.getBody().contains("Invalid request format"));
     }
 
     @Test
     void testSendEmail_ClassCastException() {
         Map<String, Object> request = new HashMap<>();
-        request.put("userId", 123); // Integer instead of String
+        request.put("userId", 123);
         request.put("eventId", EVENT_ID.toString());
         request.put("subject", TEST_SUBJECT);
         request.put("message", TEST_MESSAGE);
@@ -297,7 +297,7 @@ class NotificationControllerUnitTest {
         Map<String, Object> request = new HashMap<>();
         request.put("userId", USER_ID.toString());
         request.put("eventId", EVENT_ID.toString());
-        request.put("message", "");  // Empty message
+        request.put("message", "");
 
         ResponseEntity<String> response = notificationController.sendMessage(request);
 
@@ -311,7 +311,7 @@ class NotificationControllerUnitTest {
         Map<String, Object> request = new HashMap<>();
         request.put("userId", USER_ID.toString());
         request.put("eventId", EVENT_ID.toString());
-        request.put("message", null);  // Null message
+        request.put("message", null);
 
         ResponseEntity<String> response = notificationController.sendMessage(request);
 
@@ -324,7 +324,7 @@ class NotificationControllerUnitTest {
     void testSendMessage_EmptyEventId() {
         Map<String, Object> request = new HashMap<>();
         request.put("userId", USER_ID.toString());
-        request.put("eventId", "");  // Empty event ID
+        request.put("eventId", "");
         request.put("message", TEST_MESSAGE);
 
         ResponseEntity<String> response = notificationController.sendMessage(request);
@@ -337,7 +337,7 @@ class NotificationControllerUnitTest {
     @Test
     void testSendMessage_PhoneNumberFormatting() {
         User mockUser = getMockUser();
-        mockUser.setPhoneNumber("123-456-7890");  // Test phone number with dashes
+        mockUser.setPhoneNumber("123-456-7890");
 
         when(userService.findUserById(USER_ID)).thenReturn(mockUser);
         when(eventService.findById(EVENT_ID)).thenReturn(getMockEvent());
@@ -411,7 +411,6 @@ class NotificationControllerUnitTest {
         request.put("subject", TEST_SUBJECT);
         request.put("message", TEST_MESSAGE);
 
-        // Simulate user not found scenario
         when(userService.findUserById(USER_ID)).thenThrow(new UserNotExistException("User not found"));
 
         ResponseEntity<String> response = notificationController.sendEmail(request);
@@ -430,7 +429,6 @@ class NotificationControllerUnitTest {
         request.put("subject", TEST_SUBJECT);
         request.put("message", TEST_MESSAGE);
 
-        // Mock successful user retrieval but event not found
         when(userService.findUserById(USER_ID)).thenReturn(getMockUser());
         when(eventService.findById(EVENT_ID)).thenThrow(new EventNotExistException("Event not found"));
 
@@ -447,7 +445,7 @@ class NotificationControllerUnitTest {
     @Test
     void testSendMessage_IllegalArgumentException_NonStringUserId() {
         Map<String, Object> request = new HashMap<>();
-        request.put("userId", 123L);  // Putting a Long instead of String
+        request.put("userId", 123L);
         request.put("eventId", EVENT_ID.toString());
         request.put("message", TEST_MESSAGE);
 
@@ -463,7 +461,7 @@ class NotificationControllerUnitTest {
         Map<String, Object> request = new HashMap<>();
         request.put("userId", USER_ID.toString());
         request.put("eventId", EVENT_ID.toString());
-        request.put("message", new HashMap<>());  // Putting a Map instead of String
+        request.put("message", new HashMap<>());
 
         ResponseEntity<String> response = notificationController.sendMessage(request);
 
@@ -518,7 +516,6 @@ class NotificationControllerUnitTest {
     @Test
     void testSendEmail_MissingUserId() {
         Map<String, Object> request = new HashMap<>();
-        // userId is missing
         request.put("eventId", EVENT_ID.toString());
         request.put("subject", TEST_SUBJECT);
         request.put("message", TEST_MESSAGE);
@@ -533,7 +530,7 @@ class NotificationControllerUnitTest {
     @Test
     void testSendEmail_EmptyUserId() {
         Map<String, Object> request = new HashMap<>();
-        request.put("userId", "   ");  // Empty with spaces
+        request.put("userId", "   ");
         request.put("eventId", EVENT_ID.toString());
         request.put("subject", TEST_SUBJECT);
         request.put("message", TEST_MESSAGE);
@@ -551,7 +548,6 @@ class NotificationControllerUnitTest {
         Map<String, Object> request = new HashMap<>();
         request.put("userId", USER_ID.toString());
         request.put("eventId", EVENT_ID.toString());
-        // subject is missing
         request.put("message", TEST_MESSAGE);
 
         ResponseEntity<String> response = notificationController.sendEmail(request);
@@ -566,7 +562,7 @@ class NotificationControllerUnitTest {
         Map<String, Object> request = new HashMap<>();
         request.put("userId", USER_ID.toString());
         request.put("eventId", EVENT_ID.toString());
-        request.put("subject", "   ");  // Empty subject with spaces
+        request.put("subject", "   ");
         request.put("message", TEST_MESSAGE);
 
         ResponseEntity<String> response = notificationController.sendEmail(request);
@@ -582,7 +578,6 @@ class NotificationControllerUnitTest {
         request.put("userId", USER_ID.toString());
         request.put("eventId", EVENT_ID.toString());
         request.put("subject", TEST_SUBJECT);
-        // message is missing
 
         ResponseEntity<String> response = notificationController.sendEmail(request);
 
@@ -597,7 +592,7 @@ class NotificationControllerUnitTest {
         request.put("userId", USER_ID.toString());
         request.put("eventId", EVENT_ID.toString());
         request.put("subject", TEST_SUBJECT);
-        request.put("message", "  ");  // Empty message with spaces
+        request.put("message", "  ");
 
         ResponseEntity<String> response = notificationController.sendEmail(request);
 
