@@ -242,4 +242,38 @@ public class TaskController {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    /**
+     * Retrieves all tasks assigned to a specific user.
+     *
+     * @param userId the ID of the user whose tasks to retrieve
+     * @return ResponseEntity containing the list of tasks or error message
+     */
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Map<String, Object>> getTasksForUser(@PathVariable Long userId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            if (userId == null || userId <= 0) {
+                response.put("success", false);
+                response.put("message", "Invalid user ID. User ID must be a positive number.");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
+            List<Task> tasks = taskService.getTasksByUser(userId);
+            response.put("success", true);
+            response.put("data", tasks);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (UserNotExistException e) {
+            response.put("success", false);
+            response.put("data", null);
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("data", null);
+            response.put("message", "Error fetching tasks: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

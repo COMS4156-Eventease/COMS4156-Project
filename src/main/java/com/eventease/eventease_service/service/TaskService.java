@@ -54,7 +54,14 @@ public class TaskService {
      * @return a list of tasks associated with the event
      */
     public List<Task> getTasksByEvent(Long eventId) {
-        return taskRepository.findByEventId(eventId);
+        try {
+            List<Task> tasks = taskRepository.findByEventId(eventId);
+            System.out.println("Fetched tasks: " + tasks);
+            return tasks;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error fetching tasks for event ID: " + eventId, e);
+        }
     }
 
     /**
