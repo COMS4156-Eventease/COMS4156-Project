@@ -16,6 +16,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     Optional<Task> findById(Long id);
 
+    @Query("SELECT t FROM Task t WHERE t.event.id = :eventId")
     List<Task> findByEventId(Long eventId);
 
 
@@ -27,7 +28,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     @Modifying
     @Transactional
     @Query("UPDATE Task t SET t.assignedUser = :user WHERE t.id = :taskId AND t.event.id = :eventId")
-    int updateTaskAssignedUser( Long taskId, User user);
+    int updateTaskAssignedUser(Long taskId, User user);
 
 
     @Modifying
@@ -35,5 +36,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     @Query("DELETE FROM Task t WHERE t.id = :taskId")
     void deleteTask(Long taskId);
 
+    @Query("SELECT t FROM Task t WHERE t.assignedUser.id = :userId")
     List<Task> findByAssignedUserId(Long userId);
 }

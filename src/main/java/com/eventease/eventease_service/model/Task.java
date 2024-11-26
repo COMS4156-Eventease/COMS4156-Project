@@ -40,13 +40,13 @@ public class Task implements Serializable {
     private TaskStatus status;
 
     @NotNull(message = "Event is required")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "event_id", nullable = false)
     @JsonProperty("eventID")
     private Event event;
 
     @NotNull(message = "Assigned user is required")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "assigned_user_id", nullable = false)
     @JsonProperty("userID")
     private User assignedUser;
