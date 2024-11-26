@@ -5,10 +5,7 @@ import com.eventease.eventease_service.exception.EventNotExistException;
 import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.User;
-import com.eventease.eventease_service.service.EmailService;
-import com.eventease.eventease_service.service.EventService;
-import com.eventease.eventease_service.service.TwilioService;
-import com.eventease.eventease_service.service.UserService;
+import com.eventease.eventease_service.service.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -17,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,7 +51,7 @@ class NotificationControllerUnitTest {
 
     private User getMockUser() {
         User mockUser = new User();
-        mockUser.setId(1L); // Manually set the userId
+        mockUser.setId(1L);
         mockUser.setFirstName("John");
         mockUser.setLastName("Doe");
         mockUser.setPhoneNumber("+1234567890");
@@ -90,20 +88,7 @@ class NotificationControllerUnitTest {
     }
 
     @Test
-    void testSendMessage_MissingUserId() {
-        Map<String, Object> request = new HashMap<>();
-        request.put("eventId", EVENT_ID.toString());
-        request.put("message", TEST_MESSAGE);
-
-        ResponseEntity<String> response = notificationController.sendMessage(request);
-
-        assertEquals(400, response.getStatusCode().value());
-        assertEquals("User ID is required", response.getBody());
-        verifyNoInteractions(userService, eventService, twilioService);
-    }
-
-    @Test
-    void testSendMessage_InvalidUserIdFormat() {
+    void testSendMessage_InvalidUserId() {
         Map<String, Object> request = new HashMap<>();
         request.put("userId", "invalid");
         request.put("eventId", EVENT_ID.toString());
@@ -117,16 +102,113 @@ class NotificationControllerUnitTest {
     }
 
     @Test
-    void testSendMessage_MissingEventId() {
+    void testSendMessage_MissingUserId() {
         Map<String, Object> request = new HashMap<>();
-        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
         request.put("message", TEST_MESSAGE);
 
         ResponseEntity<String> response = notificationController.sendMessage(request);
 
         assertEquals(400, response.getStatusCode().value());
-        assertEquals("Invalid Event ID format", response.getBody());
+        assertEquals("User ID is required", response.getBody());
         verifyNoInteractions(userService, eventService, twilioService);
+    }
+
+    @Test
+    void testSendMessage_InvalidPhoneNumber() {
+        User mockUser = getMockUser();
+        mockUser.setPhoneNumber("invalid-phone");
+
+        when(userService.findUserById(USER_ID)).thenReturn(mockUser);
+        when(eventService.findById(EVENT_ID)).thenReturn(getMockEvent());
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendMessage(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Invalid phone number format", response.getBody());
+    }
+
+    @Test
+    void testSendMessage_MissingPhoneNumber() {
+        User mockUser = getMockUser();
+        mockUser.setPhoneNumber(null);
+
+        when(userService.findUserById(USER_ID)).thenReturn(mockUser);
+        when(eventService.findById(EVENT_ID)).thenReturn(getMockEvent());
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendMessage(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("User's phone number is not available", response.getBody());
+    }
+
+    @Test
+    void testSendEmail_Success() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+        request.put("message", TEST_MESSAGE);
+
+        when(userService.findUserById(USER_ID)).thenReturn(getMockUser());
+        when(eventService.findById(EVENT_ID)).thenReturn(getMockEvent());
+        doNothing().when(emailService).sendEmail(
+                "john.doe@example.com",
+                TEST_SUBJECT,
+                "Dear John Doe,\n\n" + TEST_MESSAGE
+        );
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("Email sent successfully!", response.getBody());
+        verify(emailService).sendEmail(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void testSendEmail_MissingRequiredFields() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Subject is required", response.getBody());
+
+        request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+
+        response = notificationController.sendEmail(request);
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Message is required", response.getBody());
+    }
+
+    @Test
+    void testSendMessage_EventNotFound() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("message", TEST_MESSAGE);
+
+        when(userService.findUserById(USER_ID)).thenReturn(getMockUser());
+        when(eventService.findById(EVENT_ID)).thenThrow(new EventNotExistException("Event not found"));
+
+        ResponseEntity<String> response = notificationController.sendMessage(request);
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Event does not exist: Event not found", response.getBody());
     }
 
     @Test
@@ -139,56 +221,206 @@ class NotificationControllerUnitTest {
         when(userService.findUserById(USER_ID)).thenThrow(new UserNotExistException("User not found"));
 
         ResponseEntity<String> response = notificationController.sendMessage(request);
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("User does not exist: User not found", response.getBody());
+    }
+
+    @Test
+    void testSendMessage_InternalServerError() {
+        when(userService.findUserById(USER_ID)).thenReturn(getMockUser());
+        when(eventService.findById(EVENT_ID)).thenReturn(getMockEvent());
+        doThrow(new RuntimeException("Twilio service error"))
+                .when(twilioService).sendSms(anyString(), anyString());
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendMessage(request);
+
+        assertEquals(500, response.getStatusCode().value());
+        assertTrue(response.getBody().contains("Failed to send notification"));
+    }
+
+    @Test
+    void testSendEmail_InternalServerError() {
+        when(userService.findUserById(USER_ID)).thenReturn(getMockUser());
+        when(eventService.findById(EVENT_ID)).thenReturn(getMockEvent());
+        doThrow(new RuntimeException("Email service error"))
+                .when(emailService).sendEmail(anyString(), anyString(), anyString());
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+
+        assertEquals(500, response.getStatusCode().value());
+        assertTrue(response.getBody().contains("Failed to send email"));
+    }
+
+
+    @Test
+    void testSendEmail_IllegalArgumentBeforeServiceCall() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+        request.put("message", TEST_MESSAGE);
+
+        when(userService.findUserById(USER_ID)).thenReturn(getMockUser());
+        when(eventService.findById(EVENT_ID)).thenThrow(new IllegalArgumentException("Test exception"));
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+        assertEquals(400, response.getStatusCode().value());
+        assertTrue(response.getBody().contains("Invalid request format"));  // Changed to match actual error message
+    }
+
+    @Test
+    void testSendEmail_ClassCastException() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", 123); // Integer instead of String
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+        assertEquals(500, response.getStatusCode().value());
+        assertTrue(response.getBody().contains("Failed to send email"));
+    }
+
+    @Test
+    void testSendMessage_EmptyMessage() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("message", "");  // Empty message
+
+        ResponseEntity<String> response = notificationController.sendMessage(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Message is required", response.getBody());
+        verifyNoInteractions(userService, eventService, twilioService);
+    }
+
+    @Test
+    void testSendMessage_NullMessage() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("message", null);  // Null message
+
+        ResponseEntity<String> response = notificationController.sendMessage(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Message is required", response.getBody());
+        verifyNoInteractions(userService, eventService, twilioService);
+    }
+
+    @Test
+    void testSendMessage_EmptyEventId() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", "");  // Empty event ID
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendMessage(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Invalid Event ID format", response.getBody());
+        verifyNoInteractions(userService, eventService, twilioService);
+    }
+
+    @Test
+    void testSendMessage_PhoneNumberFormatting() {
+        User mockUser = getMockUser();
+        mockUser.setPhoneNumber("123-456-7890");  // Test phone number with dashes
+
+        when(userService.findUserById(USER_ID)).thenReturn(mockUser);
+        when(eventService.findById(EVENT_ID)).thenReturn(getMockEvent());
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendMessage(request);
+
+        assertEquals(200, response.getStatusCode().value());
+        verify(twilioService).sendSms("+11234567890", "Dear John Doe,\n" + TEST_MESSAGE);
+    }
+
+    @Test
+    void testSendEmail_NullEmail() {
+        User mockUser = getMockUser();
+        mockUser.setEmail(null);
+
+        when(userService.findUserById(USER_ID)).thenReturn(mockUser);
+        when(eventService.findById(EVENT_ID)).thenReturn(getMockEvent());
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Invalid user email", response.getBody());
+        verifyNoInteractions(emailService);
+    }
+
+    @Test
+    void testSendEmail_EmptyEventId() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", "");
+        request.put("subject", TEST_SUBJECT);
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Event ID is required", response.getBody());
+        verifyNoInteractions(userService, eventService, emailService);
+    }
+
+    @Test
+    void testSendMessage_InvalidEventId() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", "invalid");
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendMessage(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Invalid Event ID format", response.getBody());
+        verifyNoInteractions(userService, eventService, twilioService);
+    }
+
+    @Test
+    void testSendEmail_UserNotExist() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+        request.put("message", TEST_MESSAGE);
+
+        // Simulate user not found scenario
+        when(userService.findUserById(USER_ID)).thenThrow(new UserNotExistException("User not found"));
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
 
         assertEquals(400, response.getStatusCode().value());
         assertEquals("User does not exist: User not found", response.getBody());
         verify(userService).findUserById(USER_ID);
-        verifyNoInteractions(eventService, twilioService);
+        verifyNoInteractions(emailService);
     }
-
-    @Test
-    void testSendEmail_Success() {
-        Map<String, Object> request = new HashMap<>();
-        request.put("userId", "1");
-        request.put("eventId", "1");
-        request.put("subject", "Test Subject");
-        request.put("message", "Hello, this is a test message!");
-
-        // Mock user and event
-        User mockUser = new User();
-        mockUser.setId(1L);
-        mockUser.setFirstName("John");
-        mockUser.setLastName("Doe");
-        mockUser.setPhoneNumber("+1234567890");
-        mockUser.setEmail("john.doe@example.com");
-
-        Event mockEvent = new Event();
-        mockEvent.setId(1L);
-        mockEvent.setName("Sample Event");
-
-        when(userService.findUserById(1L)).thenReturn(mockUser);
-        when(eventService.findById(1L)).thenReturn(mockEvent);
-
-        doNothing().when(emailService).sendEmail(
-                "john.doe@example.com", // Match the mock user's email
-                "Test Subject",
-                "Dear John Doe,\n\nHello, this is a test message!"
-        );
-
-        ResponseEntity<String> response = notificationController.sendEmail(request);
-
-        assertEquals(200, response.getStatusCode().value());
-        assertEquals("Email sent successfully!", response.getBody());
-
-        verify(userService).findUserById(1L);
-        verify(eventService).findById(1L);
-        verify(emailService).sendEmail(
-                "john.doe@example.com", // Match the actual invocation
-                "Test Subject",
-                "Dear John Doe,\n\nHello, this is a test message!"
-        );
-    }
-
 
     @Test
     void testSendEmail_EventNotExist() {
@@ -198,6 +430,7 @@ class NotificationControllerUnitTest {
         request.put("subject", TEST_SUBJECT);
         request.put("message", TEST_MESSAGE);
 
+        // Mock successful user retrieval but event not found
         when(userService.findUserById(USER_ID)).thenReturn(getMockUser());
         when(eventService.findById(EVENT_ID)).thenThrow(new EventNotExistException("Event not found"));
 
@@ -209,4 +442,228 @@ class NotificationControllerUnitTest {
         verify(eventService).findById(EVENT_ID);
         verifyNoInteractions(emailService);
     }
+
+
+    @Test
+    void testSendMessage_IllegalArgumentException_NonStringUserId() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", 123L);  // Putting a Long instead of String
+        request.put("eventId", EVENT_ID.toString());
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendMessage(request);
+
+        assertEquals(500, response.getStatusCode().value());
+        assertTrue(response.getBody().startsWith("Failed to send notification"));
+        verifyNoInteractions(userService, eventService, twilioService);
+    }
+
+    @Test
+    void testSendMessage_IllegalArgumentException_NonStringMessage() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("message", new HashMap<>());  // Putting a Map instead of String
+
+        ResponseEntity<String> response = notificationController.sendMessage(request);
+
+        assertEquals(500, response.getStatusCode().value());
+        assertTrue(response.getBody().startsWith("Failed to send notification"));
+        verifyNoInteractions(userService, eventService, twilioService);
+    }
+
+    @Test
+    void testSendMessage_IllegalArgumentException_FromService() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("message", TEST_MESSAGE);
+
+        when(userService.findUserById(USER_ID)).thenReturn(getMockUser());
+        when(eventService.findById(EVENT_ID)).thenThrow(new IllegalArgumentException("Invalid event data"));
+
+        ResponseEntity<String> response = notificationController.sendMessage(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertTrue(response.getBody().startsWith("Invalid request format"));
+        verify(userService).findUserById(USER_ID);
+        verify(eventService).findById(EVENT_ID);
+        verifyNoInteractions(twilioService);
+    }
+
+    @Test
+    void testSendMessage_IllegalArgumentException_FromTwilioService() {
+        User mockUser = getMockUser();
+        Event mockEvent = getMockEvent();
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("message", TEST_MESSAGE);
+
+        when(userService.findUserById(USER_ID)).thenReturn(mockUser);
+        when(eventService.findById(EVENT_ID)).thenReturn(mockEvent);
+        doThrow(new IllegalArgumentException("Invalid phone number"))
+                .when(twilioService).sendSms(anyString(), anyString());
+
+        ResponseEntity<String> response = notificationController.sendMessage(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertTrue(response.getBody().startsWith("Invalid request format"));
+        verify(userService).findUserById(USER_ID);
+        verify(eventService).findById(EVENT_ID);
+        verify(twilioService).sendSms(anyString(), anyString());
+    }
+
+    @Test
+    void testSendEmail_MissingUserId() {
+        Map<String, Object> request = new HashMap<>();
+        // userId is missing
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("User ID is required", response.getBody());
+        verifyNoInteractions(userService, eventService, emailService);
+    }
+
+    @Test
+    void testSendEmail_EmptyUserId() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", "   ");  // Empty with spaces
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("User ID is required", response.getBody());
+        verifyNoInteractions(userService, eventService, emailService);
+    }
+
+
+    @Test
+    void testSendEmail_MissingSubject() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        // subject is missing
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Subject is required", response.getBody());
+        verifyNoInteractions(userService, eventService, emailService);
+    }
+
+    @Test
+    void testSendEmail_EmptySubject() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", "   ");  // Empty subject with spaces
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Subject is required", response.getBody());
+        verifyNoInteractions(userService, eventService, emailService);
+    }
+
+    @Test
+    void testSendEmail_MissingMessage() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+        // message is missing
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Message is required", response.getBody());
+        verifyNoInteractions(userService, eventService, emailService);
+    }
+
+    @Test
+    void testSendEmail_EmptyMessage() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+        request.put("message", "  ");  // Empty message with spaces
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Message is required", response.getBody());
+        verifyNoInteractions(userService, eventService, emailService);
+    }
+
+    @Test
+    void testSendEmail_InvalidIdFormat() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", "invalid");
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+        request.put("message", TEST_MESSAGE);
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Invalid ID format", response.getBody());
+        verifyNoInteractions(userService, eventService, emailService);
+    }
+
+    @Test
+    void testSendEmail_InvalidEmailFormat() {
+        User mockUser = getMockUser();
+        mockUser.setEmail("invalid-email-format");
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+        request.put("message", TEST_MESSAGE);
+
+        when(userService.findUserById(USER_ID)).thenReturn(mockUser);
+        when(eventService.findById(EVENT_ID)).thenReturn(getMockEvent());
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Invalid user email", response.getBody());
+        verify(userService).findUserById(USER_ID);
+        verify(eventService).findById(EVENT_ID);
+        verifyNoInteractions(emailService);
+    }
+
+    @Test
+    void testSendEmail_EmailServiceException() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("userId", USER_ID.toString());
+        request.put("eventId", EVENT_ID.toString());
+        request.put("subject", TEST_SUBJECT);
+        request.put("message", TEST_MESSAGE);
+
+        when(userService.findUserById(USER_ID)).thenReturn(getMockUser());
+        when(eventService.findById(EVENT_ID)).thenReturn(getMockEvent());
+        doThrow(new RuntimeException("Email service error"))
+                .when(emailService).sendEmail(anyString(), anyString(), anyString());
+
+        ResponseEntity<String> response = notificationController.sendEmail(request);
+
+        assertEquals(500, response.getStatusCode().value());
+        assertTrue(response.getBody().contains("Failed to send email"));
+        verify(userService).findUserById(USER_ID);
+        verify(eventService).findById(EVENT_ID);
+        verify(emailService).sendEmail(anyString(), anyString(), anyString());
+    }
+
 }

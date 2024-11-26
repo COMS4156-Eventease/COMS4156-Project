@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.test.context.ActiveProfiles;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -66,6 +67,89 @@ class TwilioServiceTest {
 
         verify(messageCreatorMock).create();
     }
+
+    @Test
+    void testSendSms_NullRecipientNumber() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            twilioService.sendSms(null, TEST_MESSAGE);
+        });
+
+        assertEquals("The 'to' phone number cannot be null or empty.", exception.getMessage());
+        verifyNoInteractions(messageCreatorMock);
+    }
+
+    @Test
+    void testSendSms_EmptyRecipientNumber() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            twilioService.sendSms("", TEST_MESSAGE);
+        });
+
+        assertEquals("The 'to' phone number cannot be null or empty.", exception.getMessage());
+        verifyNoInteractions(messageCreatorMock);
+    }
+
+    @Test
+    void testSendSms_NullMessageBody() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            twilioService.sendSms(VALID_RECIPIENT_NUMBER, null);
+        });
+
+        assertEquals("The message body cannot be null or empty.", exception.getMessage());
+        verifyNoInteractions(messageCreatorMock);
+    }
+
+    @Test
+    void testSendSms_EmptyMessageBody() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            twilioService.sendSms(VALID_RECIPIENT_NUMBER, "");
+        });
+
+        assertEquals("The message body cannot be null or empty.", exception.getMessage());
+        verifyNoInteractions(messageCreatorMock);
+    }
+
+    @Test
+    void testSendSms_InvalidRecipientNumber() {
+        doThrow(new IllegalArgumentException("Invalid phone number"))
+                .when(messageCreatorMock).create();
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            twilioService.sendSms("invalid-number", TEST_MESSAGE);
+        });
+
+        assertEquals("Invalid phone number", exception.getMessage());
+        verify(messageCreatorMock).create();
+    }
+
+    @Test
+    void testTwilioInitialization() {
+        twilioMock.verify(() -> Twilio.init(TEST_ACCOUNT_SID, TEST_AUTH_TOKEN), times(1));
+    }
+
+    @Test
+    void testMessageCreatorWithValidInputs() {
+        twilioService.sendSms(VALID_RECIPIENT_NUMBER, TEST_MESSAGE);
+
+        messageMock.verify(() -> Message.creator(
+                new PhoneNumber(VALID_RECIPIENT_NUMBER),
+                new PhoneNumber(VALID_TWILIO_NUMBER),
+                TEST_MESSAGE));
+        verify(messageCreatorMock).create();
+    }
+
+    @Test
+    void testSendSms_ExceptionDuringMessageCreation() {
+        doThrow(new RuntimeException("Message creation failed"))
+                .when(messageCreatorMock).create();
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            twilioService.sendSms(VALID_RECIPIENT_NUMBER, TEST_MESSAGE);
+        });
+
+        assertEquals("Message creation failed", exception.getMessage());
+        verify(messageCreatorMock).create();
+    }
+
 
     @AfterEach
     void tearDown() {
