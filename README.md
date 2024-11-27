@@ -323,25 +323,30 @@ Here is documentation for all the HTTP endpoints exposed by this application:
   * HTTP 500 Internal Server Error for other issues.
 
 #### Task Management
-##### POST /api/events/{eventId}/tasks
+##### POST /api/tasks
 * Creates a new task for the specified event and assigns it to a user.
 * Expected Input Parameters:
-  * Path Parameters:
-    * eventId (String): The ID of the event for which the task is being created.
   * Query Parameters:
-    * userId (String): The ID of the user creating the task.
+    * eventId (Long): The ID of the event for which the task is being created.
+    * userId (Long): The ID of the user to be assigned to the task.
+  * Query Parameters:
     * Request Body (JSON):
-    * name (String): Name of the task.
-    * description (String): Description of the task.
-    * status (String): Status of the task. Valid values: PENDING, COMPLETED, IN_PROGRESS, CANCELLED.
-    * dueDate (String): Due date of the task in YYYY-MM-DD HH:MM:SS format.
+      * task:
+          * name (String): Name of the task.
+          * description (String): Description of the task.
+          * status (String): Status of the task. Valid values: PENDING, COMPLETED, IN_PROGRESS, CANCELLED.
 * Upon Success:
   * HTTP 201 Status Code with:
-  *  `{
-     "taskId": "The newly created task's ID",
-     "eventId": "The event's ID",
-     "userId": "The user's ID"
-     }`
+    *  `{
+          "success": true,
+          "data": [
+            {
+              Event ID and event information,
+              User ID and user information,
+              Task object details
+            }
+          ]
+        }`
 * Upon Failure:
   * HTTP 404 Status Code is returned along with the message indicating user or event not found.
   * HTTP 500 Internal Server Error for other issues.
