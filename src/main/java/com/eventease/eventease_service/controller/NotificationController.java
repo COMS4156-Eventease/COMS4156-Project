@@ -64,11 +64,6 @@ public class NotificationController {
                 return ResponseEntity.badRequest().body("Invalid Event ID format");
             }
 
-            String message = (String) request.get("message");
-            if (message == null || message.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body("Message is required");
-            }
-
             User user;
             Event event;
             try {
@@ -81,12 +76,12 @@ public class NotificationController {
             } catch (EventNotExistException e) {
                 return ResponseEntity.badRequest().body("Event does not exist: " + e.getMessage());
             }
+            System.out.println(event);
 
-            message = "You are invited to " + event.getName() + ".";
-
-            String formattedMessage = String.format("Dear %s %s,\n%s",
-                    user.getFirstName(), user.getLastName(), message);
-
+            String formattedMessage = String.format("You have been invited to the event: %s - click the link below to accept!",
+                    event.getName());
+            String oneClickLink = String.format("https://eventease-439518.ue.r.appspot.com/api/events/1c/%s/%s",
+                    userId, eventId);
 
             String phoneNumber = user.getPhoneNumber();
             if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
@@ -103,6 +98,7 @@ public class NotificationController {
             }
 
             twilioService.sendSms(phoneNumber, formattedMessage);
+            twilioService.sendSms(phoneNumber, oneClickLink);
             return ResponseEntity.ok("Notification sent!");
 
         } catch (IllegalArgumentException e) {
@@ -117,57 +113,58 @@ public class NotificationController {
     @PostMapping("/send-email")
     public ResponseEntity<String> sendEmail(@RequestBody Map<String, Object> request) {
         try {
+
             String userIdString = (String) request.get("userId");
-            String eventIdString = (String) request.get("eventId");
-            String subject = (String) request.get("subject");
-            String message = (String) request.get("message");
-
-            if (userIdString == null || userIdString.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body("User ID is required");
-            }
-            if (eventIdString == null || eventIdString.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body("Event ID is required");
-            }
-            if (subject == null || subject.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body("Subject is required");
-            }
-            if (message == null || message.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body("Message is required");
-            }
-
             Long userId;
-            Long eventId;
             try {
                 userId = Long.parseLong(userIdString);
-                eventId = Long.parseLong(eventIdString);
             } catch (NumberFormatException e) {
-                return ResponseEntity.badRequest().body("Invalid ID format");
+                return ResponseEntity.badRequest().body("Invalid User ID format");
             }
 
-            // Get user and event
-            User user = userService.findUserById(userId);
-            Event event = eventService.findById(eventId);
+            String eventIdString = (String) request.get("eventId");
+            Long eventId;
+            try {
+                eventId = Long.parseLong(eventIdString);
+            } catch (NumberFormatException e) {
+                return ResponseEntity.badRequest().body("Invalid Event ID format");
+            }
 
-            // Validate email
+            User user;
+            Event event;
+            try {
+                user = userService.findUserById(userId);
+            } catch (UserNotExistException e) {
+                return ResponseEntity.badRequest().body("User does not exist: " + e.getMessage());
+            }
+            try {
+                event = eventService.findById(eventId);
+            } catch (EventNotExistException e) {
+                return ResponseEntity.badRequest().body("Event does not exist: " + e.getMessage());
+            }
+            System.out.println(event);
+
+            // check user email format is valid
             if (user.getEmail() == null || !EMAIL_PATTERN.matcher(user.getEmail()).matches()) {
                 return ResponseEntity.badRequest().body("Invalid user email");
             }
 
-            message = "You are invited to " + event.getName() + ".";
-            String formattedMessage = String.format("Dear %s %s,\n\n%s",
-                    user.getFirstName(), user.getLastName(), message);
+            String oneClickLink = String.format("https://eventease-439518.ue.r.appspot.com/api/events/1c/%s/%s",
+                    userId, eventId);
+            String formattedMessage = String.format("Dear %s %s,\n\nYou have been invited to the following event: %s.\n\nPlease click on the following link to accept:\n%s",
+                    user.getFirstName(), user.getLastName(), event.getName(), oneClickLink);
+            String subject = "EventEase Invitation - Please RSVP";
 
             emailService.sendEmail(user.getEmail(), subject, formattedMessage);
             return ResponseEntity.ok("Email sent successfully!");
 
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body("Invalid User ID or Event ID format");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Invalid request format: " + e.getMessage());
-        } catch (UserNotExistException e) {
-            return ResponseEntity.badRequest().body("User does not exist: " + e.getMessage());
-        } catch (EventNotExistException e) {
-            return ResponseEntity.badRequest().body("Event does not exist: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Failed to send email: " + e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body("Failed to send email: " + e.getMessage());
         }
     }
 }
