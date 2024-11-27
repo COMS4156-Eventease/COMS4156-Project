@@ -1,4 +1,4 @@
-package com.eventease.eventease_service;
+package com.eventease.eventease_service.integration_test;
 
 import com.eventease.eventease_service.config.GoogleCloudStorageConfig;
 import com.google.cloud.storage.Blob;
@@ -18,21 +18,19 @@ import static org.mockito.ArgumentMatchers.eq;
 public class GCPBucketIntegrationTest {
 
   @MockBean
-  private Storage storage; // Mock the Storage bean
+  private Storage storage;
 
   @Autowired
   private GoogleCloudStorageConfig googleCloudStorageConfig;
 
   @Test
   public void testStorageBeanInitialization() throws Exception {
-    // Verify that the storage bean is initialized
     Storage storageBean = googleCloudStorageConfig.storage();
     assertEquals(storage, storageBean, "Storage bean should match the mock");
   }
 
   @Test
   public void testFileUpload() {
-    // Mock the bucket and blob behavior
     Bucket bucket = Mockito.mock(Bucket.class);
     Blob blob = Mockito.mock(Blob.class);
 
@@ -40,7 +38,6 @@ public class GCPBucketIntegrationTest {
     Mockito.when(bucket.create(eq("test.txt"), any(byte[].class), eq("text/plain"))).thenReturn(blob);
     Mockito.when(blob.getMediaLink()).thenReturn("https://example.com/test.txt");
 
-    // Simulate file upload
     String bucketName = "4156-group-bucket";
     String fileName = "test.txt";
     String fileContent = "Test content";
@@ -48,7 +45,6 @@ public class GCPBucketIntegrationTest {
     Blob uploadedBlob = mockBucket.create(fileName, fileContent.getBytes(), "text/plain");
     String mediaLink = uploadedBlob.getMediaLink();
 
-    // Assertions
     Mockito.verify(storage).get(bucketName);
     Mockito.verify(bucket).create(fileName, fileContent.getBytes(), "text/plain");
     assertEquals("https://example.com/test.txt", mediaLink, "The media link should match the mocked URL");

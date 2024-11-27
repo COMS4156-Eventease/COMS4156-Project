@@ -16,10 +16,8 @@ public class DatabaseIntegrationTest {
   private DataSource dataSource;
 
   @Test
-  public void shouldConnectToDatabase() throws Exception {
-    // Act: Obtain a connection from the data source
+  public void connectToDatabase() throws Exception {
     try (Connection connection = dataSource.getConnection()) {
-      // Assert: Check if the connection is valid
       assertNotNull(connection, "Connection should not be null");
       assertTrue(connection.isValid(2), "Connection should be valid");
     }
