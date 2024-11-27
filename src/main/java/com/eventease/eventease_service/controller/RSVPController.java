@@ -74,13 +74,7 @@ public class RSVPController {
 
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 
-    } catch (Exception e) {
-      response.put("success", false);
-      response.put("data", new ArrayList<>());
-      response.put("message", e.getMessage());
-
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    } 
   }
 
 
@@ -113,12 +107,6 @@ public class RSVPController {
 
       return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 
-    } catch (Exception error) {
-      response.put("success", false);
-      response.put("data", new ArrayList<>());
-      response.put("message", error.getMessage());
-
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -151,13 +139,6 @@ public class RSVPController {
       response.put("message", error.getMessage());
 
       return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-
-    } catch (Exception error) {
-      response.put("success", false);
-      response.put("data", new ArrayList<>());
-      response.put("message", error.getMessage());
-
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
   }
@@ -192,13 +173,7 @@ public class RSVPController {
 
       return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 
-    } catch (Exception e) {
-      response.put("success", false);
-      response.put("data", new ArrayList<>());
-      response.put("message", e.getMessage());
-
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    } 
   }
 
   /**
@@ -229,11 +204,6 @@ public class RSVPController {
 
       return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 
-    } catch (Exception error) {
-      response.put("success", false);
-      response.put("message", error.getMessage());
-
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -262,10 +232,6 @@ public class RSVPController {
       response.put("message", error.getMessage());
       return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 
-    } catch (Exception error) {
-      response.put("success", false);
-      response.put("message", error.getMessage());
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -294,10 +260,6 @@ public class RSVPController {
       response.put("message", error.getMessage());
       return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 
-    } catch (Exception error) {
-      response.put("success", false);
-      response.put("message", error.getMessage());
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -319,7 +281,14 @@ public class RSVPController {
     rsvp.setStatus("ATTENDING");
     rsvp.setEventRole("PARTICIPANT");
 
-    ResponseEntity<?> response = createRSVP(eventId, userId, rsvp);
+    ResponseEntity<?> response;
+    try
+    {
+       response = createRSVP(eventId, userId, rsvp);
+    } catch (Exception e) {
+      return ResponseEntity.badRequest().body("Failed to create RSVP.");
+    }
+
     if (response.getStatusCode() == HttpStatus.CREATED) {
       String message = String.format("Successfully accepted invitation to event: %s", event.getName());
       return ResponseEntity.ok(message);

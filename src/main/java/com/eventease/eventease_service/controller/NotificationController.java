@@ -130,13 +130,6 @@ public class NotificationController {
                 return ResponseEntity.badRequest().body("Invalid Event ID format");
             }
 
-            if (userId == null) {
-                return ResponseEntity.badRequest().body("User ID is required");
-            }
-            if (eventId == null) {
-                return ResponseEntity.badRequest().body("Event ID is required");
-            }
-
             User user;
             Event event;
             try {
@@ -150,6 +143,11 @@ public class NotificationController {
                 return ResponseEntity.badRequest().body("Event does not exist: " + e.getMessage());
             }
             System.out.println(event);
+
+            // check user email format is valid
+            if (user.getEmail() == null || !EMAIL_PATTERN.matcher(user.getEmail()).matches()) {
+                return ResponseEntity.badRequest().body("Invalid user email");
+            }
 
             String oneClickLink = String.format("https://eventease-439518.ue.r.appspot.com/api/events/1c/%s/%s",
                     userId, eventId);
