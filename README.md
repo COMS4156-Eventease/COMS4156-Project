@@ -166,6 +166,7 @@ We also have a Postman project, with documentation and interactive use of the ap
 Here is documentation for all the HTTP endpoints exposed by this application:
 
 ### Created Endpoints
+
 #### Event Management
 ##### POST /api/events
 * Expected Input Parameters:
@@ -245,8 +246,7 @@ Here is documentation for all the HTTP endpoints exposed by this application:
   * HTTP 400 Status Code with "Failed to update event" in case of invalid input or other errors.
 
 
-#### RSVP Management 
-
+#### RSVP Management
 ##### POST /api/events/{eventId}/rsvp/{userId}
 * POST RSVP for an event
 * Expected Path Variables: eventId (String), userId(String)
@@ -323,94 +323,123 @@ Here is documentation for all the HTTP endpoints exposed by this application:
   * HTTP 500 Internal Server Error for other issues.
 
 #### Task Management
-##### POST /api/events/{eventId}/tasks
+##### POST /api/tasks
 * Creates a new task for the specified event and assigns it to a user.
 * Expected Input Parameters:
-  * Path Parameters:
-    * eventId (String): The ID of the event for which the task is being created.
   * Query Parameters:
-    * userId (String): The ID of the user creating the task.
+    * eventId (Long): The ID of the event for which the task is being created.
+    * userId (Long): The ID of the user to be assigned to the task.
+  * Query Parameters:
     * Request Body (JSON):
-    * name (String): Name of the task.
-    * description (String): Description of the task.
-    * status (String): Status of the task. Valid values: PENDING, COMPLETED, IN_PROGRESS, CANCELLED.
-    * dueDate (String): Due date of the task in YYYY-MM-DD HH:MM:SS format.
+      * task:
+          * name (String): Name of the task.
+          * description (String): Description of the task.
+          * status (String): Status of the task. Valid values: PENDING, COMPLETED, IN_PROGRESS, CANCELLED.
 * Upon Success:
   * HTTP 201 Status Code with:
-  *  `{
-     "taskId": "The newly created task's ID",
-     "eventId": "The event's ID",
-     "userId": "The user's ID"
-     }`
+    * success: True
+    * data (Map):
+      * userID (String): Associated user information
+      * eventID (String): Associated event information
+      * task (Object): Task details
 * Upon Failure:
   * HTTP 404 Status Code is returned along with the message indicating user or event not found.
   * HTTP 500 Internal Server Error for other issues.
     
-##### GET /api/events/{eventId}/tasks
+##### GET /api/tasks/event/{eventId}
 * Retrieves all tasks associated with a specific event.
 * Expected Input Parameters:
   * Path Parameters:
     * eventId (String): The ID of the event to retrieve tasks from.
 * Upon Success:
-  * HTTP 200 Status Code with list of tasks associated with event.
+  * HTTP 200 Status Code with:
+    * success: True
+    * data (Map): 
+      * List of tasks associated with event.
 * Upon Failure:
   * HTTP 404 Status Code is returned along with the message indicating event not found.
   * HTTP 500 Internal Server Error for other issues.
 
-##### GET /api/events/{eventId}/tasks/{taskId}
-* Retrieves a specific task by its ID and associated event.
+##### GET /api/tasks{taskId}
+* Retrieves a specific task by its ID.
 * Expected Input Parameters:
   * Path Parameters:
-    * taskId (String): The ID of the event and specific task to retrieve.
+    * taskId (String): The ID of the task to retrieve.
 * Upon Success:
-  * HTTP 200 Status Code with task and its respective details.
+  * HTTP 200 Status Code with:
+    * success: True
+    * data (Map):
+      * userID (String): Associated user information
+      * eventID (String): Associated event information
+      * task (Object): Task details
 * Upon Failure:
-  * HTTP 404 Status Code is returned along with the message indicating event or task not found.
+  * HTTP 404 Status Code is returned along with the message indicating task not found.
   * HTTP 500 Internal Server Error for other issues.
 
-##### PATCH /api/events/{eventId}/tasks/{taskId}/status
-* Updates the status of a specific task within an event.
+##### PATCH /api/tasks/{taskId}/status
+* Updates the status of a specific task.
 * Expected Input Parameters:
   * Path Parameters:
-    * eventId (String): The ID of the event containing the task that is being updated.
     * taskId (String): The ID of the specific task being updated.
   * Query Parameters:
     * status (String): Status of the task. Valid values: PENDING, COMPLETED, IN_PROGRESS, CANCELLED.
 * Upon Success:
-  * HTTP 200 Status Code with task and its respective details.
+  * HTTP 200 Status Code with:
+    * success: True
+    * data (Map):
+      * "Task status updated successfully"
 * Upon Failure:
   * HTTP 400 Status Code is returned if the request body does not contain a valid status enumeration.
   * HTTP 404 Status Code is returned along with the message indicating event or task not found.
   * HTTP 500 Internal Server Error for other issues.
 
-##### PATCH /api/events/{eventId}/tasks/{taskId}/user
-* Updates the assigned user for a specific task within an event.
+##### PATCH /api/tasks/{taskId}/user
+* Updates the assigned user for a specific task.
 * Expected Input Parameters:
   * Path Parameters:
-    * eventId (String): The ID of the event containing the task that is being updated.
     * taskId (String): The ID of the specific task being updated.
   * Query Parameters:
     * userId (String): User ID to be assigned task to.
 * Upon Success:
-  * HTTP 200 Status Code with task and its respective details.
+  * HTTP 200 Status Code with:
+    * success: True
+    * data (Map):
+      * "Task assigned user updated successfully"
 * Upon Failure:
-  * HTTP 404 Status Code is returned along with the message indicating user, event, or task not found.
+  * HTTP 404 Status Code is returned along with the message indicating user or task not found.
   * HTTP 500 Internal Server Error for other issues.
 
-##### DELETE /api/events/{eventId}/tasks/{taskId}
-* Deletes a specific task associated with an event.
+##### DELETE /api/tasks/{taskId}
+* Deletes a specific task given a task ID.
 * Expected Input Parameters:
   * Path Parameters:
-    * eventId (String): The ID of the event containing the task deleting.
     * taskId (String): The ID of the specific task being deleted.
 * Upon Success:
-  * HTTP 200 Status Code with successful deletion message.
+  * HTTP 200 Status Code with:
+    * success: True
+    * data (Map):
+      * "Task deleted successfully"
 * Upon Failure:
-  * HTTP 404 Status Code is returned along with the message indicating event or task not found.
+  * HTTP 404 Status Code is returned along with the message indicating task not found.
+  * HTTP 500 Internal Server Error for other issues.
+
+##### GET /api/tasks/user/{userId}
+* Retrieves all tasks assigned to a specific user.
+* Expected Input Parameters:
+  * Path Parameters:
+    * userId (String): The ID of the user to retrieve tasks from.
+* Upon Success:
+  * HTTP 200 Status Code with:
+    * success: True
+    * data (Map): List of tasks to return
+      * userID (String): Associated user information
+      * eventID (String): Associated event information
+      * task (Object): Task details
+* Upon Failure:
+  * HTTP 404 Status Code is returned along with the message indicating user not found.
   * HTTP 500 Internal Server Error for other issues.
 
 #### User Management
-
 ##### POST /api/users/add
 * Adds a new user to the system.
 * Expected Input Parameters:
@@ -426,8 +455,6 @@ Here is documentation for all the HTTP endpoints exposed by this application:
   * HTTP 400 Bad Request for invalid input data.
   * HTTP 500 Internal Server Error for other issues.
 
-
-
 ##### GET /api/users/list
 * Retrieves a list of users based on filter criteria.
 * Expected Input Parameters:
@@ -441,8 +468,6 @@ Here is documentation for all the HTTP endpoints exposed by this application:
   * HTTP 200 Status Code with a list of users.
 * Upon Failure:
   * HTTP 500 Internal Server Error for other issues.
-
-
 
 ##### PATCH /api/users/update/{id}
 * Updates an existing user's details.
@@ -461,8 +486,6 @@ Here is documentation for all the HTTP endpoints exposed by this application:
   * HTTP 404 Status Code if the user is not found.
   * HTTP 500 Internal Server Error for other issues.
 
-
-
 ##### DELETE /api/users/delete/{id}
 * Deletes a specific user from the system.
 * Expected Input Parameters:
@@ -473,3 +496,30 @@ Here is documentation for all the HTTP endpoints exposed by this application:
 * Upon Failure:
   * HTTP 404 Status Code if the user is not found.
   * HTTP 500 Internal Server Error for other issues.
+
+#### Notification Management
+##### POST /api/send-message
+* Sends an SMS notification to a user about an event invitation.
+* Expected Input Parameters:
+  * Path Parameters:
+    * userId (Long): The ID of the user to send to.
+    * eventId (Long): The ID of the event being invited to.
+* Upon Success:
+  * HTTP 200 Status Code with the message "SMS sent successfully!"
+* Upon Failure:
+  * HTTP 400 Status Code if there are any issues with the User or Event ID.
+  * HTTP 500 Internal Server Error for other issues.
+
+##### POST /api/send-email
+* Sends an email notification to a user about an event invitation.
+* Expected Input Parameters:
+  * Path Parameters:
+    * userId (Long): The ID of the user to send to.
+    * eventId (Long): The ID of the event being invited to.
+* Upon Success:
+  * HTTP 200 Status Code with the message "Email sent successfully!"
+* Upon Failure:
+  * HTTP 400 Status Code if there are any issues with the User or Event ID.
+  * HTTP 500 Internal Server Error for other issues.
+
+
