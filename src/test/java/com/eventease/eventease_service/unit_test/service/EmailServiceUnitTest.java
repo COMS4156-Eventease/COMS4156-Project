@@ -9,6 +9,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.ActiveProfiles;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -58,6 +59,85 @@ class EmailServiceUnitTest {
         verify(emailConfigMock, times(2)).getJavaMailSender();
     }
 
+    @Test
+    void testSendEmail_InvalidEmailAddress() {
+        doThrow(new IllegalArgumentException("Invalid email address"))
+                .when(mailSenderMock).send(any(SimpleMailMessage.class));
+
+        try {
+            emailService.sendEmail("invalid-email", SUBJECT, TEXT);
+        } catch (Exception e) {
+            // Expected exception
+        }
+
+        verify(mailSenderMock, times(1)).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void testSendEmail_EmptySubject() {
+        emailService.sendEmail(TO_EMAIL, "", TEXT);
+
+        verify(mailSenderMock, times(1)).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void testSendEmail_EmptyText() {
+        emailService.sendEmail(TO_EMAIL, SUBJECT, "");
+
+        verify(mailSenderMock, times(1)).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void testSendEmail_NullTo() {
+        assertThrows(IllegalArgumentException.class, () ->
+                emailService.sendEmail(null, SUBJECT, TEXT));
+        verify(mailSenderMock, never()).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void testSendEmail_NullSubject() {
+        emailService.sendEmail(TO_EMAIL, null, TEXT);
+
+        verify(mailSenderMock, times(1)).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void testSendEmail_NullText() {
+        emailService.sendEmail(TO_EMAIL, SUBJECT, null);
+
+        verify(mailSenderMock, times(1)).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void testMailSenderInitialization() {
+        emailService.sendEmail(TO_EMAIL, SUBJECT, TEXT);
+
+        verify(emailConfigMock, times(1)).getJavaMailSender();
+        verify(mailSenderMock, times(1)).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void testSendEmail_RetryLogic() {
+        doThrow(new RuntimeException("Simulated failure"))
+                .doThrow(new RuntimeException("Another failure"))
+                .doNothing()
+                .when(mailSenderMock).send(any(SimpleMailMessage.class));
+
+        emailService.sendEmail(TO_EMAIL, SUBJECT, TEXT);
+
+        verify(mailSenderMock, times(3)).send(any(SimpleMailMessage.class));
+        verify(emailConfigMock, times(3)).getJavaMailSender();
+    }
+
+    @Test
+    void testSendEmail_LongSubjectAndText() {
+        String longSubject = "This is a very long subject line to test the handling of long text inputs in the email service.";
+        String longText = "This is a very long body text. ".repeat(50);
+
+        emailService.sendEmail(TO_EMAIL, longSubject, longText);
+
+        verify(mailSenderMock, times(1)).send(any(SimpleMailMessage.class));
+    }
 
     @AfterEach
     void tearDown() {}

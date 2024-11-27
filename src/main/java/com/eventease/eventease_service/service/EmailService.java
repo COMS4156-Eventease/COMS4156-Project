@@ -25,18 +25,31 @@ public class EmailService {
     }
 
     public void sendEmail(String to, String subject, String text) {
+        if (to == null || to.trim().isEmpty()) {
+            throw new IllegalArgumentException("The 'to' email cannot be null or empty.");
+        }
+
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail);
         message.setTo(to);
-        message.setSubject(subject);
-        message.setText(text);
+        message.setSubject(subject != null ? subject : "");
+        message.setText(text != null ? text : "");
 
-        try {
-            mailSender.send(message);
-        } catch (Exception e) {
-            // If sending fails, try to reinitialize the mail sender and retry once
-            initializeMailSender();
-            mailSender.send(message);
+        int maxRetries = 3;
+        Exception lastException = null;
+
+        for (int i = 0; i < maxRetries; i++) {
+            try {
+                mailSender.send(message);
+                return;
+            } catch (Exception e) {
+                lastException = e;
+                if (e instanceof IllegalArgumentException) {
+                    throw e;
+                }
+                initializeMailSender();
+            }
         }
+        throw new RuntimeException(lastException.getMessage(), lastException);
     }
 }
