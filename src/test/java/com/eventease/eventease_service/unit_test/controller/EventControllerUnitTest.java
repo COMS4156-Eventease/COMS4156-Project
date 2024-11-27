@@ -4,12 +4,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.eventease.eventease_service.controller.EventController;
 import com.eventease.eventease_service.exception.EventNotExistException;
+import com.eventease.eventease_service.exception.GCSUploadException;
 import com.eventease.eventease_service.exception.UserNotExistException;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.User;
@@ -206,6 +208,108 @@ public class EventControllerUnitTest {
         .andExpect(jsonPath("$.success").value(false))
         .andExpect(jsonPath("$.data").isEmpty())
         .andExpect(jsonPath("$.message").value("Event not found"));
+  }
+
+  @Test
+  public void getAllEventsSuccessTest() throws Exception {
+    Event event1 = new Event();
+    event1.setId(1L);
+    event1.setName("Event 1");
+
+    Event event2 = new Event();
+    event2.setId(2L);
+    event2.setName("Event 2");
+
+    List<Event> events = Arrays.asList(event1, event2);
+    when(eventService.findAllEvents()).thenReturn(events);
+
+    mockMvc.perform(get("/api/events/all"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.data[0].id").value(1))
+        .andExpect(jsonPath("$.data[1].id").value(2));
+  }
+
+  @Test
+  public void getAllEventsFailTest() throws Exception {
+    when(eventService.findAllEvents()).thenThrow(new RuntimeException("Database error"));
+
+    mockMvc.perform(get("/api/events/all"))
+        .andExpect(status().isInternalServerError())
+        .andExpect(jsonPath("$.success").value(false))
+        .andExpect(jsonPath("$.data").isEmpty())
+        .andExpect(jsonPath("$.message").value("Failed to fetch events: Database error"));
+  }
+
+  @Test
+  public void deleteEventSuccessTest() throws Exception {
+    doNothing().when(eventService).delete(123L);
+
+    mockMvc.perform(delete("/api/events/123"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.data").isEmpty());
+  }
+
+  @Test
+  public void deleteEventNotFoundTest() throws Exception {
+    doThrow(new EventNotExistException("Event not found"))
+        .when(eventService).delete(123L);
+
+    mockMvc.perform(delete("/api/events/123"))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.success").value(false))
+        .andExpect(jsonPath("$.data").isEmpty())
+        .andExpect(jsonPath("$.message").value("Event not found"));
+  }
+
+  @Test
+  public void addEventGCSUploadFailTest() throws Exception {
+    User organizer = new User();
+    organizer.setId(1L);
+
+    when(userService.findUserById(1L)).thenReturn(organizer);
+    doThrow(new GCSUploadException("Upload failed"))
+        .when(eventService).add(any(Event.class), any(MultipartFile[].class));
+
+    MockMultipartFile image = new MockMultipartFile("images", "test-image.jpg",
+        MediaType.IMAGE_JPEG_VALUE, "Test Image Content".getBytes());
+
+    mockMvc.perform(multipart("/api/events")
+            .file(image)
+            .param("organizerId", "1")
+            .param("name", "Event Title")
+            .param("description", "Event description")
+            .param("location", "123 Venue St.")
+            .param("date", "2024-11-15")
+            .param("time", "10:30")
+            .param("capacity", "100")
+            .param("budget", "1200")
+            .contentType(MediaType.MULTIPART_FORM_DATA))
+        .andExpect(status().isInternalServerError())
+        .andExpect(jsonPath("$.success").value(false))
+        .andExpect(jsonPath("$.message").value("GCP error"));
+  }
+
+  @Test
+  public void updateEventInvalidInputTest() throws Exception {
+    Event existingEvent = new Event();
+    existingEvent.setId(123L);
+
+    when(eventService.findById(123L)).thenReturn(existingEvent);
+    doThrow(new NumberFormatException("Invalid capacity"))
+        .when(eventService).updateEvent(eq(123L), any(Event.class), any(MultipartFile[].class));
+
+    mockMvc.perform(multipart("/api/events/123")
+            .param("capacity", "invalid")
+            .with(request -> {
+              request.setMethod("PATCH");
+              return request;
+            })
+            .contentType(MediaType.MULTIPART_FORM_DATA))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.success").value(false))
+        .andExpect(jsonPath("$.message").value("Failed to update event: For input string: \"invalid\""));
   }
 
 }
