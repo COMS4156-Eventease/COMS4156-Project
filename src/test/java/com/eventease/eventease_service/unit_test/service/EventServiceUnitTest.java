@@ -3,10 +3,13 @@ package com.eventease.eventease_service.unit_test.service;
 import com.eventease.eventease_service.exception.EventNotExistException;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.EventImage;
+import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.repository.EventRepository;
 import com.eventease.eventease_service.service.EventService;
 import com.eventease.eventease_service.service.ImageStorageService;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -189,6 +192,106 @@ public class EventServiceUnitTest {
     verify(eventRepository, times(1)).save(testEvent);
   }
 
+  @Test
+  void testUpdateEventWithNullFields() {
+    when(eventRepository.findById(1L)).thenReturn(testEvent);
+
+    Event updatedEvent = new Event();
+    // All fields are null
+
+    eventService.updateEvent(1L, updatedEvent, null);
+
+    // Verify original values are retained
+    assertEquals("Test Event", testEvent.getName());
+    assertEquals("Test Description", testEvent.getDescription());
+    assertEquals("Test Location", testEvent.getLocation());
+    assertEquals(100, testEvent.getCapacity());
+    assertEquals(1000, testEvent.getBudget());
+
+    verify(eventRepository, times(1)).save(testEvent);
+  }
+
+  @Test
+  void testUpdateEventWithZeroOrNegativeValues() {
+    when(eventRepository.findById(1L)).thenReturn(testEvent);
+
+    Event updatedEvent = new Event();
+    updatedEvent.setCapacity(-1);
+    updatedEvent.setBudget(0);
+
+    eventService.updateEvent(1L, updatedEvent, null);
+
+    // Verify original values are retained for invalid inputs
+    assertEquals(100, testEvent.getCapacity());
+    assertEquals(1000, testEvent.getBudget());
+
+    verify(eventRepository, times(1)).save(testEvent);
+  }
+
+  @Test
+  void testUpdateEventWithEmptyImageArray() {
+    when(eventRepository.findById(1L)).thenReturn(testEvent);
+
+    Event updatedEvent = new Event();
+    MultipartFile[] emptyImages = new MultipartFile[]{};
+
+    // Initialize the images field
+    testEvent.setImages(new ArrayList<>());
+
+    eventService.updateEvent(1L, updatedEvent, emptyImages);
+
+    // Verify images remain unchanged
+    assertTrue(testEvent.getImages().isEmpty());
+
+    verify(eventRepository, times(1)).save(testEvent);
+  }
+
+  @Test
+  void testUpdateEventWithMultipleImages() {
+    when(eventRepository.findById(1L)).thenReturn(testEvent);
+
+    MockMultipartFile image1 = new MockMultipartFile("images", "test1.jpg", "image/jpeg", "Test Image 1".getBytes());
+    MockMultipartFile image2 = new MockMultipartFile("images", "test2.jpg", "image/jpeg", "Test Image 2".getBytes());
+
+    when(imageStorageService.save(image1)).thenReturn("http://image-url.com/test1.jpg");
+    when(imageStorageService.save(image2)).thenReturn("http://image-url.com/test2.jpg");
+
+    Event updatedEvent = new Event();
+    testEvent.setImages(new ArrayList<>());
+
+    eventService.updateEvent(1L, updatedEvent, new MultipartFile[]{image1, image2});
+
+    // Verify multiple images are added correctly
+    assertEquals(2, testEvent.getImages().size());
+    assertEquals("http://image-url.com/test1.jpg", testEvent.getImages().get(0).getUrl());
+    assertEquals("http://image-url.com/test2.jpg", testEvent.getImages().get(1).getUrl());
+
+    verify(eventRepository, times(1)).save(testEvent);
+  }
+
+  @Test
+  void testUpdateEventRetainingHostAndParticipants() {
+    when(eventRepository.findById(1L)).thenReturn(testEvent);
+
+    // Set original host and participants
+    User originalHost = new User();
+    Set<User> originalParticipants = new HashSet<>();
+    originalParticipants.add(new User());
+
+    testEvent.setHost(originalHost);
+    testEvent.setParticipants(originalParticipants);
+
+    Event updatedEvent = new Event();
+    updatedEvent.setName("Updated Name");
+
+    eventService.updateEvent(1L, updatedEvent, null);
+
+    // Verify host and participants remain unchanged
+    assertSame(originalHost, testEvent.getHost());
+    assertSame(originalParticipants, testEvent.getParticipants());
+
+    verify(eventRepository, times(1)).save(testEvent);
+  }
 
   /**
    * Test the delete method of EventService when the event exists.
