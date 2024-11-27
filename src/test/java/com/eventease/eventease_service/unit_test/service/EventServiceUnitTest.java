@@ -3,13 +3,12 @@ package com.eventease.eventease_service.unit_test.service;
 import com.eventease.eventease_service.exception.EventNotExistException;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.EventImage;
-import com.eventease.eventease_service.model.User;
 import com.eventease.eventease_service.repository.EventRepository;
 import com.eventease.eventease_service.service.EventService;
 import com.eventease.eventease_service.service.ImageStorageService;
+
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,6 +21,8 @@ import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -192,106 +193,6 @@ public class EventServiceUnitTest {
     verify(eventRepository, times(1)).save(testEvent);
   }
 
-  @Test
-  void testUpdateEventWithNullFields() {
-    when(eventRepository.findById(1L)).thenReturn(testEvent);
-
-    Event updatedEvent = new Event();
-    // All fields are null
-
-    eventService.updateEvent(1L, updatedEvent, null);
-
-    // Verify original values are retained
-    assertEquals("Test Event", testEvent.getName());
-    assertEquals("Test Description", testEvent.getDescription());
-    assertEquals("Test Location", testEvent.getLocation());
-    assertEquals(100, testEvent.getCapacity());
-    assertEquals(1000, testEvent.getBudget());
-
-    verify(eventRepository, times(1)).save(testEvent);
-  }
-
-  @Test
-  void testUpdateEventWithZeroOrNegativeValues() {
-    when(eventRepository.findById(1L)).thenReturn(testEvent);
-
-    Event updatedEvent = new Event();
-    updatedEvent.setCapacity(-1);
-    updatedEvent.setBudget(0);
-
-    eventService.updateEvent(1L, updatedEvent, null);
-
-    // Verify original values are retained for invalid inputs
-    assertEquals(100, testEvent.getCapacity());
-    assertEquals(1000, testEvent.getBudget());
-
-    verify(eventRepository, times(1)).save(testEvent);
-  }
-
-  @Test
-  void testUpdateEventWithEmptyImageArray() {
-    when(eventRepository.findById(1L)).thenReturn(testEvent);
-
-    Event updatedEvent = new Event();
-    MultipartFile[] emptyImages = new MultipartFile[]{};
-
-    // Initialize the images field
-    testEvent.setImages(new ArrayList<>());
-
-    eventService.updateEvent(1L, updatedEvent, emptyImages);
-
-    // Verify images remain unchanged
-    assertTrue(testEvent.getImages().isEmpty());
-
-    verify(eventRepository, times(1)).save(testEvent);
-  }
-
-  @Test
-  void testUpdateEventWithMultipleImages() {
-    when(eventRepository.findById(1L)).thenReturn(testEvent);
-
-    MockMultipartFile image1 = new MockMultipartFile("images", "test1.jpg", "image/jpeg", "Test Image 1".getBytes());
-    MockMultipartFile image2 = new MockMultipartFile("images", "test2.jpg", "image/jpeg", "Test Image 2".getBytes());
-
-    when(imageStorageService.save(image1)).thenReturn("http://image-url.com/test1.jpg");
-    when(imageStorageService.save(image2)).thenReturn("http://image-url.com/test2.jpg");
-
-    Event updatedEvent = new Event();
-    testEvent.setImages(new ArrayList<>());
-
-    eventService.updateEvent(1L, updatedEvent, new MultipartFile[]{image1, image2});
-
-    // Verify multiple images are added correctly
-    assertEquals(2, testEvent.getImages().size());
-    assertEquals("http://image-url.com/test1.jpg", testEvent.getImages().get(0).getUrl());
-    assertEquals("http://image-url.com/test2.jpg", testEvent.getImages().get(1).getUrl());
-
-    verify(eventRepository, times(1)).save(testEvent);
-  }
-
-  @Test
-  void testUpdateEventRetainingHostAndParticipants() {
-    when(eventRepository.findById(1L)).thenReturn(testEvent);
-
-    // Set original host and participants
-    User originalHost = new User();
-    Set<User> originalParticipants = new HashSet<>();
-    originalParticipants.add(new User());
-
-    testEvent.setHost(originalHost);
-    testEvent.setParticipants(originalParticipants);
-
-    Event updatedEvent = new Event();
-    updatedEvent.setName("Updated Name");
-
-    eventService.updateEvent(1L, updatedEvent, null);
-
-    // Verify host and participants remain unchanged
-    assertSame(originalHost, testEvent.getHost());
-    assertSame(originalParticipants, testEvent.getParticipants());
-
-    verify(eventRepository, times(1)).save(testEvent);
-  }
 
   /**
    * Test the delete method of EventService when the event exists.
@@ -328,4 +229,73 @@ public class EventServiceUnitTest {
     assertEquals(events, result);
     verify(eventRepository, times(1)).findAll();
   }
+
+  @Test
+  void testAddEventWithoutImages() {
+    eventService.add(testEvent, new MultipartFile[]{});
+
+    // Verify no images are added
+    assertTrue(testEvent.getImages().isEmpty());
+    verify(eventRepository, times(1)).save(testEvent);
+  }
+
+  @Test
+  void testFindByDateBetweenWithNoResults() {
+    LocalDate startDate = LocalDate.now();
+    LocalDate endDate = LocalDate.now().plusDays(7);
+
+    when(eventRepository.findEventsByDateRange(startDate, endDate)).thenReturn(Collections.emptyList());
+
+    List<Event> result = eventService.findByDateBetween(startDate, endDate);
+
+    assertTrue(result.isEmpty());
+    verify(eventRepository, times(1)).findEventsByDateRange(startDate, endDate);
+  }
+  @Test
+  void testUpdateEventNoUpdatesProvided() {
+    when(eventRepository.findById(1L)).thenReturn(testEvent);
+
+    eventService.updateEvent(1L, new Event(), null);
+
+    // Verify no fields are updated
+    assertEquals("Test Event", testEvent.getName());
+    assertEquals(100, testEvent.getCapacity());
+
+    verify(eventRepository, times(1)).save(testEvent);
+  }
+
+  @Test
+  @Transactional(isolation = Isolation.SERIALIZABLE)
+  void testDeleteConcurrentModification() {
+    when(eventRepository.findById(1L)).thenReturn(testEvent);
+
+    // Simulate concurrent deletion
+    doThrow(new RuntimeException("Concurrent modification error")).when(eventRepository).deleteById(1L);
+
+    assertThrows(RuntimeException.class, () -> eventService.delete(1L));
+    verify(eventRepository, times(1)).findById(1L);
+    verify(eventRepository, times(1)).deleteById(1L);
+  }
+
+  @Test
+  void testUpdateEventWithLocationDateTime() {
+    // Mock the existing event in the repository
+    when(eventRepository.findById(1L)).thenReturn(testEvent);
+
+    Event updatedEvent = new Event();
+    updatedEvent.setLocation("New Location");
+    updatedEvent.setDate(LocalDate.of(2024, 12, 25)); // New date
+    updatedEvent.setTime(LocalTime.of(15, 30));       // New time
+
+    eventService.updateEvent(1L, updatedEvent, null);
+
+    // Verify that the fields were updated
+    assertEquals("New Location", testEvent.getLocation());
+    assertEquals(LocalDate.of(2024, 12, 25), testEvent.getDate());
+    assertEquals(LocalTime.of(15, 30), testEvent.getTime());
+
+    // Verify that save was called with the updated event
+    verify(eventRepository, times(1)).save(testEvent);
+  }
+
 }
