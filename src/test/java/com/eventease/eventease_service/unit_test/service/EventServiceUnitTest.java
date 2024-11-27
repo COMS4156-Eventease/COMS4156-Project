@@ -6,7 +6,9 @@ import com.eventease.eventease_service.model.EventImage;
 import com.eventease.eventease_service.repository.EventRepository;
 import com.eventease.eventease_service.service.EventService;
 import com.eventease.eventease_service.service.ImageStorageService;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -19,6 +21,8 @@ import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -225,4 +229,73 @@ public class EventServiceUnitTest {
     assertEquals(events, result);
     verify(eventRepository, times(1)).findAll();
   }
+
+  @Test
+  void testAddEventWithoutImages() {
+    eventService.add(testEvent, new MultipartFile[]{});
+
+    // Verify no images are added
+    assertTrue(testEvent.getImages().isEmpty());
+    verify(eventRepository, times(1)).save(testEvent);
+  }
+
+  @Test
+  void testFindByDateBetweenWithNoResults() {
+    LocalDate startDate = LocalDate.now();
+    LocalDate endDate = LocalDate.now().plusDays(7);
+
+    when(eventRepository.findEventsByDateRange(startDate, endDate)).thenReturn(Collections.emptyList());
+
+    List<Event> result = eventService.findByDateBetween(startDate, endDate);
+
+    assertTrue(result.isEmpty());
+    verify(eventRepository, times(1)).findEventsByDateRange(startDate, endDate);
+  }
+  @Test
+  void testUpdateEventNoUpdatesProvided() {
+    when(eventRepository.findById(1L)).thenReturn(testEvent);
+
+    eventService.updateEvent(1L, new Event(), null);
+
+    // Verify no fields are updated
+    assertEquals("Test Event", testEvent.getName());
+    assertEquals(100, testEvent.getCapacity());
+
+    verify(eventRepository, times(1)).save(testEvent);
+  }
+
+  @Test
+  @Transactional(isolation = Isolation.SERIALIZABLE)
+  void testDeleteConcurrentModification() {
+    when(eventRepository.findById(1L)).thenReturn(testEvent);
+
+    // Simulate concurrent deletion
+    doThrow(new RuntimeException("Concurrent modification error")).when(eventRepository).deleteById(1L);
+
+    assertThrows(RuntimeException.class, () -> eventService.delete(1L));
+    verify(eventRepository, times(1)).findById(1L);
+    verify(eventRepository, times(1)).deleteById(1L);
+  }
+
+  @Test
+  void testUpdateEventWithLocationDateTime() {
+    // Mock the existing event in the repository
+    when(eventRepository.findById(1L)).thenReturn(testEvent);
+
+    Event updatedEvent = new Event();
+    updatedEvent.setLocation("New Location");
+    updatedEvent.setDate(LocalDate.of(2024, 12, 25)); // New date
+    updatedEvent.setTime(LocalTime.of(15, 30));       // New time
+
+    eventService.updateEvent(1L, updatedEvent, null);
+
+    // Verify that the fields were updated
+    assertEquals("New Location", testEvent.getLocation());
+    assertEquals(LocalDate.of(2024, 12, 25), testEvent.getDate());
+    assertEquals(LocalTime.of(15, 30), testEvent.getTime());
+
+    // Verify that save was called with the updated event
+    verify(eventRepository, times(1)).save(testEvent);
+  }
+
 }
