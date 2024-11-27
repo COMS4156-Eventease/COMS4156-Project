@@ -25,10 +25,17 @@ public class TwilioService {
     }
 
     public void sendSms(String to, String messageBody) {
+        if (to == null || to.trim().isEmpty()) {
+            throw new IllegalArgumentException("The 'to' phone number cannot be null or empty.");
+        }
+        if (messageBody == null || messageBody.trim().isEmpty()) {
+            throw new IllegalArgumentException("The message body cannot be null or empty.");
+        }
+
         Message message = Message.creator(
-                new PhoneNumber(to),
-                new PhoneNumber(twilioConfig.getPhoneNumber()),
-                messageBody)
+                        new PhoneNumber(to),
+                        new PhoneNumber(twilioConfig.getPhoneNumber()),
+                        messageBody)
                 .create();
 
         System.out.println("SMS sent with SID: " + message.getSid());

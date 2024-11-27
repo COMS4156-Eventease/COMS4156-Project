@@ -1,6 +1,7 @@
 package com.eventease.eventease_service.unit_test.controller;
 
-import org.junit.jupiter.api.BeforeAll;
+import com.eventease.eventease_service.service.EventService;
+import com.eventease.eventease_service.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.eventease.eventease_service.controller.RSVPController;
@@ -43,6 +44,12 @@ public class RSVPControllerUnitTest {
   @MockBean
   private RSVPService rsvpService;
 
+  @MockBean
+  private UserService userService;
+
+  @MockBean
+  private EventService eventService;
+
   private static RSVP rsvp;
 
   @BeforeEach
@@ -77,9 +84,7 @@ public class RSVPControllerUnitTest {
     mockMvc.perform(post("/api/events/1/rsvp/1")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"status\":\"Going\",\"notes\":\"Looking forward\"}"))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.success").value(false))
-            .andExpect(jsonPath("$.message").value("Event Not Found"));
+            .andExpect(status().isNotFound());
   }
 
   @Test
@@ -227,5 +232,67 @@ public class RSVPControllerUnitTest {
             .andExpect(jsonPath("$.message").value("User Not Found"));
   }
 
+  @Test
+  void oneClickRsvpSuccess() throws Exception {
+    Event event = new Event();
+    event.setId(1L);
+    event.setName("Test Event");
 
+    User user = new User();
+    user.setId(1L);
+
+    RSVP rsvp = new RSVP();
+    rsvp.setUser(user);
+    rsvp.setEvent(event);
+    rsvp.setStatus("ATTENDING");
+    rsvp.setEventRole("PARTICIPANT");
+
+    when(eventService.findById(1L)).thenReturn(event);
+    when(userService.findUserById(1L)).thenReturn(user);
+    when(rsvpService.createRSVP(any(), any(), any())).thenReturn(rsvp);
+
+    mockMvc.perform(get("/api/events/1c/1/1"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$").value("Successfully accepted invitation to event: Test Event"));
+  }
+
+  @Test
+  void oneClickRsvpEventNotFound() throws Exception {
+    when(eventService.findById(1L)).thenReturn(null);
+
+    mockMvc.perform(get("/api/events/1c/1/1"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$").value("Event does not exist."));
+  }
+
+  @Test
+  void oneClickRsvpUserNotFound() throws Exception {
+    Event event = new Event();
+    event.setId(1L);
+
+    when(eventService.findById(1L)).thenReturn(event);
+    when(userService.findUserById(1L)).thenReturn(null);
+
+    mockMvc.perform(get("/api/events/1c/1/1"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$").value("User does not exist."));
+  }
+
+  @Test
+  void oneClickRsvpFailedToCreate() throws Exception {
+    Event event = new Event();
+    event.setId(1L);
+
+    User user = new User();
+    user.setId(1L);
+
+    when(eventService.findById(1L)).thenReturn(event);
+    when(userService.findUserById(1L)).thenReturn(user);
+    when(rsvpService.createRSVP(any(), any(), any()))
+        .thenThrow(new RuntimeException("Failed to create RSVP"));
+
+    mockMvc.perform(get("/api/events/1c/1/1"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$").value("Failed to create RSVP."));
+  }
 }

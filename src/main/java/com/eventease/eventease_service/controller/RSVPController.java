@@ -1,8 +1,15 @@
 package com.eventease.eventease_service.controller;
 
-import com.eventease.eventease_service.exception.*;
+import com.eventease.eventease_service.exception.EventNotExistException;
+import com.eventease.eventease_service.exception.RSVPExistsException;
+import com.eventease.eventease_service.exception.RSVPNotExistException;
+import com.eventease.eventease_service.exception.UserNotExistException;
+import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.RSVP;
+import com.eventease.eventease_service.model.User;
+import com.eventease.eventease_service.service.EventService;
 import com.eventease.eventease_service.service.RSVPService;
+import com.eventease.eventease_service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +28,12 @@ import java.util.Map;
 public class RSVPController {
   @Autowired
   private RSVPService rsvpService;
+
+  @Autowired
+  private EventService eventService;
+
+  @Autowired
+  private UserService userService;
 
   /**
    * Endpoint for creating an RSVP for a user to an event
@@ -46,32 +59,27 @@ public class RSVPController {
 
       return new ResponseEntity<>(response, HttpStatus.CREATED);
 
-    } catch (EventNotExistException | UserNotExistException | RSVPOverlapException error) {
+    } catch (EventNotExistException | UserNotExistException error) {
+
       response.put("success", false);
       response.put("data", new ArrayList<>());
       response.put("message", error.getMessage());
 
-      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<>(error.getMessage(), HttpStatus.NOT_FOUND);
 
     } catch (RSVPExistsException error) {
       response.put("success", false);
       response.put("data", new ArrayList<>());
       response.put("message", error.getMessage());
 
-      return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 
-    } catch (Exception e) {
-      response.put("success", false);
-      response.put("data", new ArrayList<>());
-      response.put("message", e.getMessage());
-
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    } 
   }
 
 
   /**
-   * Endpoint for getting all the RSVPs for an event
+   * Endpoint for creating an RSVP for a user to an event
    * This method handles GET requests to retrieve the list of RSVPs to an event;
    *
    * @param eventId                 the ID of the event
@@ -99,12 +107,6 @@ public class RSVPController {
 
       return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 
-    } catch (Exception error) {
-      response.put("success", false);
-      response.put("data", new ArrayList<>());
-      response.put("message", error.getMessage());
-
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -118,7 +120,7 @@ public class RSVPController {
    * @return                          a ResponseEntity with successful message
    *                                  or an error message if the event is not found
    */
-  @DeleteMapping(value = "{eventId}/rsvp/cancel/{userId}")
+  @RequestMapping(value = "{eventId}/rsvp/cancel/{userId}", method = RequestMethod.DELETE)
   public ResponseEntity<?> cancelRSVP(@PathVariable String eventId, @PathVariable String userId) {
     Map<String, Object> response = new HashMap<>();
     try{
@@ -137,13 +139,6 @@ public class RSVPController {
       response.put("message", error.getMessage());
 
       return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-
-    } catch (Exception error) {
-      response.put("success", false);
-      response.put("data", new ArrayList<>());
-      response.put("message", error.getMessage());
-
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
   }
@@ -178,13 +173,7 @@ public class RSVPController {
 
       return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 
-    } catch (Exception e) {
-      response.put("success", false);
-      response.put("data", new ArrayList<>());
-      response.put("message", e.getMessage());
-
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    } 
   }
 
   /**
@@ -215,11 +204,6 @@ public class RSVPController {
 
       return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 
-    } catch (Exception error) {
-      response.put("success", false);
-      response.put("message", error.getMessage());
-
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -248,10 +232,6 @@ public class RSVPController {
       response.put("message", error.getMessage());
       return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 
-    } catch (Exception error) {
-      response.put("success", false);
-      response.put("message", error.getMessage());
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -280,11 +260,40 @@ public class RSVPController {
       response.put("message", error.getMessage());
       return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 
-    } catch (Exception error) {
-      response.put("success", false);
-      response.put("message", error.getMessage());
-      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
+  @RequestMapping(value = "/1c/{userId}/{eventId}", method = RequestMethod.GET)
+  public ResponseEntity<?> oneClickRsvp(@PathVariable String userId, @PathVariable String eventId) {
+    Event event = eventService.findById(Long.parseLong(eventId));
+    if (event == null) {
+      return ResponseEntity.badRequest().body("Event does not exist.");
+    }
+
+    User user = userService.findUserById(Long.parseLong(userId));
+    if(user == null) {
+      return ResponseEntity.badRequest().body("User does not exist.");
+    }
+
+    RSVP rsvp = new RSVP();
+    rsvp.setUser(user);
+    rsvp.setEvent(event);
+    rsvp.setStatus("ATTENDING");
+    rsvp.setEventRole("PARTICIPANT");
+
+    ResponseEntity<?> response;
+    try
+    {
+       response = createRSVP(eventId, userId, rsvp);
+    } catch (Exception e) {
+      return ResponseEntity.badRequest().body("Failed to create RSVP.");
+    }
+
+    if (response.getStatusCode() == HttpStatus.CREATED) {
+      String message = String.format("Successfully accepted invitation to event: %s", event.getName());
+      return ResponseEntity.ok(message);
+    } else {
+      return ResponseEntity.badRequest().body("Failed to create RSVP.");
+    }
+  }
 }
