@@ -3,23 +3,25 @@ Repository for COMS 4156 24F, Team Scrum Masters
 
 EventEase is a flexible RESTful service designed to simplify and automate the complexities of event management. EventEase offers a seamless solution to manage everything from event creation to event registration. With endpoints for task management, RSVP handling, and real-time reporting, EventEase empowers various applications with robust event management capabilities, allowing organizers and hosters to focus on delivering great user experiences. EventEase API makes it easy to integrate sophisticated event planning tools into any system, no matter the size or scope of your event.
 
-To distinguish from regular event-management services and make it useful for elderly users, Eventease provides SMS and email reminders for events, allowing elderly users to stay informed without relying on complex apps. Additionally, a simple RSVP system could be integrated, enabling one-click RSVP via email or SMS, reducing the need for navigating complicated interfaces. The API would also support caregiver collaboration, allowing caregivers to manage event details, send RSVPs, or receive notifications on behalf of elderly users. Lastly, an option for simplified, large-text invitations or event details could be offered to ensure better accessibility for users with vision impairments or low digital literacy.
+To distinguish from regular event-management services and make it useful for elderly users, Eventease provides SMS and email invitations for events, allowing elderly users to stay informed without relying on complex apps. Additionally, a simple RSVP system is integrated, enabling one-click RSVP via email or SMS, reducing the need for navigating complicated interfaces. The API would also support caregiver collaboration, allowing caregivers to manage event details, send RSVPs, or manage event tasks on behalf of elderly users. Lastly, an option for simplified, large-text invitations or event details is offered to ensure better accessibility for users with vision impairments or low digital literacy.
 
+Link to the example client application: https://github.com/alok27a/COMS4156-App
 
 ## Technologies Used
-- **Spring Boot**: 
+- **Spring Boot**: HTTP Application framework
 - **Spring MVC**: For structuring the application with the MVC pattern.
 - **MySQL**: As the relational database for data storage.
 - **Postman**: To test various endpoints provided by our service.
 - **Google Cloud Platform**: For hosting the database and service in the cloud environment.
+- **Twilio**: For the automated sending of SMSs.
+- **Gmail**: For the automated sending of emails.
 
 ## Installation 
 
-### Prerequisite
+### Prerequisites
 - **Java 17**
 - **Maven**
-- **Spring Boot 3.3.4**
-- **Ubuntu 24**
+- **Ubuntu 24.04**
   
 ### Installing the Repository
 Open the terminal in the folder in which you wish to clone the repository and enter the following command:
@@ -73,7 +75,7 @@ To make sure the application works, try navigating to http://localhost:8080/test
 
 ## Cloud Application Deployment
 
-The application is currently deployed on Google Cloud Platform (GCP) using App Engine at https://eventease-439518.ue.r.appspot.com/.
+The application is currently deployed on Google Cloud Platform (GCP) using App Engine at [https://eventease-439518.ue.r.appspot.com/](https://eventease-439518.ue.r.appspot.com/).
 
 ### Prerequisites
 1. **Google Cloud SDK**: Install and set up [Google Cloud SDK](https://cloud.google.com/sdk/docs/install).
@@ -121,14 +123,22 @@ mvn clean package
 gcloud app deploy
 ```
 
-## Creating a test coverage report and code style check
+## Optional: Create a test coverage report, static analysis report and code style check
 Generate test coverage report:
 ```bash
 mvn jacoco:report
 ```
 
-Currently, the branch coverage sits at 61%:
-![image](https://github.com/user-attachments/assets/02905c92-01c0-43b1-8c5b-a6424ca00a8b)
+Currently, the branch coverage sits at 89%:  
+![image](https://github.com/user-attachments/assets/ef78f9f2-12bc-4393-aca5-035d6e1fef07)
+
+Run PMD static analysis:
+```
+mvn pmd:check
+```
+
+Currently, our code has no PMD violations:  
+![image](https://github.com/user-attachments/assets/65b9e0c0-1713-4ee5-bec5-e73f48e22675)
 
 
 Run code style checks:
@@ -136,10 +146,8 @@ Run code style checks:
 mvn checkstyle:check
 ```
 
-Currently there are no style reports:
-![image](https://github.com/user-attachments/assets/1a22e18a-5186-41fa-bd20-a812f0b7296c)
-
-
+Currently there are no style reports:  
+![image](https://github.com/user-attachments/assets/f8644554-062f-4449-acc6-90fc7b5f8002)
 
 ## Automated CI/CD Pipeline
 
@@ -147,19 +155,29 @@ This project has an automatic CI/CD pipeline set up using GitHub Actions. The pi
 
 The pipeline does the following:
 - Compile the Java application
-- Run unit tests using `mvn test`
-- Runs and publishes a JaCoCo test coverage report as an artifact
+- Run all unit, integration, and end-to-end tests
+- Runs the JaCoCo test coverage checker
+- Runs the PMD static analysis checker
 - Checks code style using Checkstyle
+
+Reports for these are published as CI artifacts. As an example, here are the links to the reports published for commit `6a4f60a`:
+- [JaCoCo test coverage report](https://github.com/COMS4156-Eventease/COMS4156-Project/actions/runs/12062498806/artifacts/2247912307)
+- [PMD static analysis report](https://github.com/COMS4156-Eventease/COMS4156-Project/actions/runs/12062498806/artifacts/2247912711)
+- [Checkstyle report](https://github.com/COMS4156-Eventease/COMS4156-Project/actions/runs/12062498806/artifacts/2247912484)
 
 
 ## Development lifecycle
 
-For every new feature, a new branch should be created. Once that branch is ready to be merged, at least one other maintainer will need to approve it before it is able to be merged. 
+For every new feature, a new branch should be created. Once that branch is ready to be merged, at least one other maintainer will need to approve it before it is able to be merged.
+
+We use a [Trello board](https://trello.com/b/gyFWAGxS/software-engineering-project) for project management, including assigning tasks to people and tracking task completion. The board is updated during our bi-weekly meeting on Mondays and Thursdays.
 
 
 ## Endpoint Documentation 
 
 After starting the server, an autogenerated JSON OpenAPI spec can be found at http://localhost:8080/v3/api-docs, and interactive Swagger documentation at http://localhost:8080/swagger-ui.html.
+
+This auto-generated documentation can also be found for the deployed application at https://eventease-439518.ue.r.appspot.com/swagger-ui.html.
 
 We also have a Postman project, with documentation and interactive use of the application endpoints, available [here](https://app.getpostman.com/join-team?invite_code=eea8c84c7c09777bda22eee83481fbb4&target_code=2abee4fb469468093755029c4cabf645). 
 
