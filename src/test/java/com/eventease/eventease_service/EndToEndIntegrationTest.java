@@ -62,6 +62,7 @@ public class EndToEndIntegrationTest {
             .param("organizerId", userId.toString())
             .param("name", "Test Event")
             .param("time", LocalTime.now().toString())
+            .param("endTime",LocalTime.now().plusHours(1).toString())
             .param("date", LocalDate.now().plusDays(7).toString())
             .param("location", "Test Location")
             .param("description", "Test Description")

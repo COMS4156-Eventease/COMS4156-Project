@@ -1,9 +1,6 @@
 package com.eventease.eventease_service.controller;
 
-import com.eventease.eventease_service.exception.EventNotExistException;
-import com.eventease.eventease_service.exception.RSVPExistsException;
-import com.eventease.eventease_service.exception.RSVPNotExistException;
-import com.eventease.eventease_service.exception.UserNotExistException;
+import com.eventease.eventease_service.exception.*;
 import com.eventease.eventease_service.model.Event;
 import com.eventease.eventease_service.model.RSVP;
 import com.eventease.eventease_service.model.User;
@@ -67,7 +64,7 @@ public class RSVPController {
 
       return new ResponseEntity<>(error.getMessage(), HttpStatus.NOT_FOUND);
 
-    } catch (RSVPExistsException error) {
+    } catch (RSVPExistsException | RSVPOverlapException error) {
       response.put("success", false);
       response.put("data", new ArrayList<>());
       response.put("message", error.getMessage());

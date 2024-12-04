@@ -46,6 +46,7 @@ public class Event implements Serializable {
   private String location;
   private LocalDate date;
   private LocalTime time;
+  private LocalTime endTime;
   private int capacity;
   private int budget;
   private int rsvpCount = 0;
@@ -79,6 +80,7 @@ public class Event implements Serializable {
     this.location = builder.location;
     this.date = builder.date;
     this.time = builder.time;
+    this.endTime = builder.endTime;
     this.host = builder.host;
     this.capacity = builder.capacity;
     this.budget = builder.budget;
@@ -131,6 +133,14 @@ public class Event implements Serializable {
 
   public void setTime(LocalTime time) {
     this.time = time;
+  }
+
+  public LocalTime getEndTime() {
+    return this.endTime;
+  }
+
+  public void setEndTime(LocalTime endTime) {
+    this.endTime = endTime;
   }
 
   public int getCapacity() {
@@ -201,6 +211,7 @@ public class Event implements Serializable {
   }
 
   public static class Builder{
+
     @JsonProperty("id")
     private Long id;
 
@@ -218,6 +229,9 @@ public class Event implements Serializable {
 
     @JsonProperty("time")
     private LocalTime time;
+
+    @JsonProperty("endTime")
+    public LocalTime endTime;
 
     @JsonProperty("capacity")
     private int capacity;
@@ -261,6 +275,11 @@ public class Event implements Serializable {
 
     public Builder setTime(LocalTime time) {
       this.time = time;
+      return this;
+    }
+
+    public Builder setEndTime(LocalTime endTime) {
+      this.endTime = endTime;
       return this;
     }
 

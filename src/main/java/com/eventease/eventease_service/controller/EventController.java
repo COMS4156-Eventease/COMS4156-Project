@@ -44,6 +44,7 @@ public class EventController {
       @RequestParam("organizerId") Long organizerId,
       @RequestParam("name") String name,
       @RequestParam("time") String time,
+      @RequestParam("endTime") String endTime,
       @RequestParam("date") String date,
       @RequestParam("location") String location,
       @RequestParam("description") String description,
@@ -64,6 +65,7 @@ public class EventController {
       Event event = new Event.Builder()
           .setName(name)
           .setTime(LocalTime.parse(time))
+          .setEndTime(LocalTime.parse(endTime))
           .setDate(LocalDate.parse(date))
           .setLocation(location)
           .setDescription(description)
