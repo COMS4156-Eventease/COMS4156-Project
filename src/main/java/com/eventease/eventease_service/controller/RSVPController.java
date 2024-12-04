@@ -64,7 +64,7 @@ public class RSVPController {
 
       return new ResponseEntity<>(error.getMessage(), HttpStatus.NOT_FOUND);
 
-    } catch (RSVPExistsException | RSVPOverlapException error) {
+    } catch (RSVPExistsException | RSVPOverlapException | EventFullException error) {
       response.put("success", false);
       response.put("data", new ArrayList<>());
       response.put("message", error.getMessage());
