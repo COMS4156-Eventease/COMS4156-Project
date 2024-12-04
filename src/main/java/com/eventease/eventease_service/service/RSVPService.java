@@ -8,6 +8,8 @@ import com.eventease.eventease_service.repository.RSVPRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,16 +41,31 @@ public class RSVPService {
       throw new RSVPExistsException("RSVP Already Exists");
     }
 
+    rsvp.setEvent(event);
+    rsvp.setUser(user);
+    LocalDate date = event.getDate();
+    if(date != null){
+      if(event.getTime() != null){
+        LocalDateTime startTime = date.atTime(event.getTime());
+        rsvp.setStartTime(startTime);
+      }
+
+      if(event.getEndTime() != null){
+        LocalDateTime endTime = date.atTime(event.getEndTime());
+        rsvp.setEndTime(endTime);
+      }
+
+    }
+
     // check RSVP with overlapping time
     List<RSVP> overlappingRSVPs = rsvpRepository.findOverlappingRSVPs(
             user.getId(), rsvp.getStartTime(), rsvp.getEndTime()
     );
+
     if (!overlappingRSVPs.isEmpty()) {
       throw new RSVPOverlapException("RSVP overlaps with an existing RSVP");
     }
 
-    rsvp.setEvent(event);
-    rsvp.setUser(user);
     event.setRsvpCount(event.getRsvpCount() + 1);
     return rsvpRepository.save(rsvp);
   }
